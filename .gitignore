@@ -1,0 +1,29 @@
+# Dependências e artefatos de execução
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+
+# Variáveis de ambiente (nunca versionar segredos)
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Banco de dados local usado nos testes
+.devdb/
+
+# Cache do npm usado no ambiente de desenvolvimento
+.npm-cache/
+
+# Referências e materiais de apoio (as capturas finais são versionadas)
+refs/*
+!refs/screens/
+!refs/screens/*.png
+
+# Logs e arquivos de sistema
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,220 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EstadoEquipamento {
+  PROPRIO
+  EMPRESTADO
+
+  @@map("estado_equipamento")
+}
+
+enum TipoAgenda {
+  INDIVIDUAL
+  BANDA
+
+  @@map("tipo_agenda")
+}
+
+model Musico {
+  idMusico   Int     @id @default(autoincrement())
+  nome       String  @db.VarChar(150)
+  email      String  @unique @db.VarChar(255)
+  senhaHash  String
+  cargo      String  @db.VarChar(150)
+  fotoPerfil String? @db.VarChar(500)
+  ativo      Boolean @default(true)
+
+  bandasLideradas Banda[]           @relation("LiderBanda")
+  participacoes   MembroBanda[]
+  repertorios     RepertorioMusico[]
+  feedbacks       Feedback[]
+  agendas         Agenda[]
+
+  @@map("Musico")
+}
+
+model Banda {
+  idBanda       Int     @id @default(autoincrement())
+  nome          String  @db.VarChar(150)
+  descricao     String? @db.Text
+  codigoConvite String  @unique @db.VarChar(20)
+  idLider       Int
+  ativo         Boolean @default(true)
+
+  lider        Musico        @relation("LiderBanda", fields: [idLider], references: [idMusico], onDelete: Restrict, onUpdate: Cascade)
+  membros      MembroBanda[]
+  equipamentos Equipamento[]
+  ensaios      Ensaio[]
+  eventos      Evento[]
+  repertorios  Repertorio[]
+  agendas      Agenda[]
+  feedbacks    Feedback[]
+
+  @@index([idLider])
+  @@map("Banda")
+}
+
+model MembroBanda {
+  idBanda  Int
+  idMusico Int
+
+  banda  Banda  @relation(fields: [idBanda], references: [idBanda], onDelete: Cascade, onUpdate: Cascade)
+  musico Musico @relation(fields: [idMusico], references: [idMusico], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([idBanda, idMusico])
+  @@index([idMusico])
+  @@map("Banda_Membro")
+}
+
+model Equipamento {
+  idEquipamento Int               @id @default(autoincrement())
+  nome          String            @db.VarChar(150)
+  estado        EstadoEquipamento
+  responsavel   String?           @db.VarChar(150)
+  descricao     String?           @db.Text
+  idBanda       Int
+  ativo         Boolean           @default(true)
+
+  banda   Banda              @relation(fields: [idBanda], references: [idBanda], onDelete: Cascade, onUpdate: Cascade)
+  eventos EventoEquipamento[]
+
+  @@index([idBanda])
+  @@map("Equipamento")
+}
+
+model Ensaio {
+  idEnsaio  Int      @id @default(autoincrement())
+  data      DateTime @db.Date
+  local     String?  @db.VarChar(255)
+  descricao String?  @db.Text
+  idBanda   Int
+  ativo     Boolean  @default(true)
+
+  banda Banda @relation(fields: [idBanda], references: [idBanda], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([idBanda])
+  @@index([data])
+  @@map("Ensaio")
+}
+
+model Evento {
+  idEvento  Int      @id @default(autoincrement())
+  nome      String   @db.VarChar(150)
+  data      DateTime @db.Date
+  local     String?  @db.VarChar(255)
+  descricao String?  @db.Text
+  idBanda   Int
+  ativo     Boolean  @default(true)
+
+  banda        Banda               @relation(fields: [idBanda], references: [idBanda], onDelete: Cascade, onUpdate: Cascade)
+  repertorios  EventoRepertorio[]
+  equipamentos EventoEquipamento[]
+  agendas      Agenda[]
+
+  @@index([idBanda])
+  @@index([data])
+  @@map("Evento")
+}
+
+model EventoRepertorio {
+  idEvento     Int
+  idRepertorio Int
+
+  evento     Evento     @relation(fields: [idEvento], references: [idEvento], onDelete: Cascade, onUpdate: Cascade)
+  repertorio Repertorio @relation(fields: [idRepertorio], references: [idRepertorio], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([idEvento, idRepertorio])
+  @@index([idRepertorio])
+  @@map("Evento_Repertorio")
+}
+
+model EventoEquipamento {
+  idEvento      Int
+  idEquipamento Int
+
+  evento      Evento      @relation(fields: [idEvento], references: [idEvento], onDelete: Cascade, onUpdate: Cascade)
+  equipamento Equipamento @relation(fields: [idEquipamento], references: [idEquipamento], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([idEvento, idEquipamento])
+  @@index([idEquipamento])
+  @@map("Evento_Equipamento")
+}
+
+model Repertorio {
+  idRepertorio    Int     @id @default(autoincrement())
+  musica          String  @db.VarChar(200)
+  tom             String? @db.VarChar(3)
+  duracaoSegundos Int?
+  observacao      String? @db.Text
+  idBanda         Int
+  ativo           Boolean @default(true)
+
+  banda   Banda             @relation(fields: [idBanda], references: [idBanda], onDelete: Cascade, onUpdate: Cascade)
+  musicos RepertorioMusico[]
+  eventos EventoRepertorio[]
+
+  @@index([idBanda])
+  @@index([musica])
+  @@map("Repertorio")
+}
+
+model RepertorioMusico {
+  idRepertorio Int
+  idMusico     Int
+  funcaoMusico String? @db.VarChar(150)
+
+  repertorio Repertorio @relation(fields: [idRepertorio], references: [idRepertorio], onDelete: Cascade, onUpdate: Cascade)
+  musico     Musico     @relation(fields: [idMusico], references: [idMusico], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([idRepertorio, idMusico])
+  @@index([idMusico])
+  @@map("Repertorio_Musico")
+}
+
+model Agenda {
+  idAgenda     Int        @id @default(autoincrement())
+  titulo       String     @db.VarChar(150)
+  descricao    String?    @db.Text
+  data         DateTime   @db.Date
+  horario      String     @db.VarChar(5)
+  concluido    Boolean    @default(false)
+  criadoPor    String?    @db.VarChar(150)
+  tipoAgenda   TipoAgenda
+  visibilidade TipoAgenda @default(INDIVIDUAL)
+  idEvento     Int?
+  idBanda      Int?
+  idMusico     Int?
+  ativo        Boolean    @default(true)
+
+  evento Evento? @relation(fields: [idEvento], references: [idEvento], onDelete: SetNull, onUpdate: Cascade)
+  banda  Banda?  @relation(fields: [idBanda], references: [idBanda], onDelete: SetNull, onUpdate: Cascade)
+  musico Musico? @relation(fields: [idMusico], references: [idMusico], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([idBanda])
+  @@index([idMusico])
+  @@index([idEvento])
+  @@index([data])
+  @@map("Agenda")
+}
+
+model Feedback {
+  idFeedback Int     @id @default(autoincrement())
+  comentario String  @db.Text
+  anonimo    Boolean @default(false)
+  idMusico   Int
+  idBanda    Int
+  ativo      Boolean @default(true)
+
+  musico Musico @relation(fields: [idMusico], references: [idMusico], onDelete: Cascade, onUpdate: Cascade)
+  banda  Banda  @relation(fields: [idBanda], references: [idBanda], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([idBanda])
+  @@index([idMusico])
+  @@map("Feedback")
+}

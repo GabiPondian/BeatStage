@@ -1,0 +1,13 @@
+{
+  "name": "beatstage",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BeatStage — frontend React integrado ao backend Express/Prisma",
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build",
+    "seed": "node scripts/seed-demo.mjs"
+  }
+}

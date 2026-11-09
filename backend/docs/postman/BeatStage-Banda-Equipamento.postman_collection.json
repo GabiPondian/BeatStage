@@ -1,0 +1,2410 @@
+{
+  "info": {
+    "_postman_id": "3f0c9a2e-7b41-4d58-9e2a-1c6d4b8f0a73",
+    "name": "BeatStage - Banda e Equipamento",
+    "description": "Coleção de testes do backend BeatStage (Express + Prisma + PostgreSQL + JWT).\n\nComo usar:\n1. Suba a API: npm run dev (porta 3000).\n2. Importe este arquivo no Postman (ou Insomnia/Thunder Client).\n3. Rode a coleção inteira com o Collection Runner, na ordem em que está.\n\nFluxo: cria os músicos (rota pública), faz login e guarda o token em tokenLider,\nusa esse token como auth padrão da coleção em todas as rotas privadas,\ntesta perfil, IDOR (403) e troca de senha, exercita Banda e Equipamento\ne no final cada músico exclui o próprio cadastro (exclusão lógica).\n\nVariáveis encadeadas: idLider, idMembro1, idMembro2, idBanda, idEquipamento,\nidEquipamento2, tokenLider, tokenMembro1, tokenMembro2, emailLider, emailMembro1, emailMembro2.\n\nTodas as exclusões são lógicas: o registro continua no banco com ativo=false.\n\nCada requisição tem asserts automáticos (aba Tests): status HTTP, mensagens de erro,\ndedupe de membros, código de convite, cascatas, JWT e autorização.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "idLider",
+      "value": ""
+    },
+    {
+      "key": "idMembro1",
+      "value": ""
+    },
+    {
+      "key": "idMembro2",
+      "value": ""
+    },
+    {
+      "key": "idBanda",
+      "value": ""
+    },
+    {
+      "key": "codigoConvite",
+      "value": ""
+    },
+    {
+      "key": "idEquipamento",
+      "value": ""
+    },
+    {
+      "key": "idEquipamento2",
+      "value": ""
+    },
+    {
+      "key": "tokenLider",
+      "value": ""
+    },
+    {
+      "key": "tokenMembro1",
+      "value": ""
+    },
+    {
+      "key": "tokenMembro2",
+      "value": ""
+    },
+    {
+      "key": "emailLider",
+      "value": ""
+    },
+    {
+      "key": "emailMembro1",
+      "value": ""
+    },
+    {
+      "key": "emailMembro2",
+      "value": ""
+    },
+    {
+      "key": "idEnsaio",
+      "value": ""
+    },
+    {
+      "key": "idRepertorio",
+      "value": ""
+    },
+    {
+      "key": "idEvento",
+      "value": ""
+    },
+    {
+      "key": "idAgenda",
+      "value": ""
+    },
+    {
+      "key": "idAgendaBanda",
+      "value": ""
+    },
+    {
+      "key": "idFeedback",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Setup - Músicos",
+      "description": "Cria os três músicos usados pela banda. Guarda os ids nas variáveis.",
+      "item": [
+        {
+          "name": "Criar músico: Líder Teste",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Líder Teste\",\"email\":\"lider.{{$timestamp}}@beatstage.test\",\"senha\":\"senhaSegura123\",\"cargo\":\"Guitarrista\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/musicos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 - músico cadastrado\", () => { pm.response.to.have.status(201); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"senhaHash não aparece na resposta\", () => { pm.expect(corpo.musico).to.not.have.property(\"senhaHash\"); });",
+                  "pm.collectionVariables.set(\"idLider\", corpo.musico.idMusico);",
+                  "pm.collectionVariables.set(\"emailLider\", corpo.musico.email);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar músico: Membro Um Teste",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Membro Um Teste\",\"email\":\"membro1.{{$timestamp}}@beatstage.test\",\"senha\":\"senhaSegura123\",\"cargo\":\"Baterista\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/musicos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 - músico cadastrado\", () => { pm.response.to.have.status(201); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"senhaHash não aparece na resposta\", () => { pm.expect(corpo.musico).to.not.have.property(\"senhaHash\"); });",
+                  "pm.collectionVariables.set(\"idMembro1\", corpo.musico.idMusico);",
+                  "pm.collectionVariables.set(\"emailMembro1\", corpo.musico.email);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar músico: Membro Dois Teste",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Membro Dois Teste\",\"email\":\"membro2.{{$timestamp}}@beatstage.test\",\"senha\":\"senhaSegura123\",\"cargo\":\"Baixista\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/musicos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 - músico cadastrado\", () => { pm.response.to.have.status(201); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"senhaHash não aparece na resposta\", () => { pm.expect(corpo.musico).to.not.have.property(\"senhaHash\"); });",
+                  "pm.collectionVariables.set(\"idMembro2\", corpo.musico.idMusico);",
+                  "pm.collectionVariables.set(\"emailMembro2\", corpo.musico.email);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Autenticação e perfil",
+      "description": "Login, JWT, middleware de autenticação, perfil do usuário autenticado, IDOR (403) e troca de senha.",
+      "item": [
+        {
+          "name": "Login com senha errada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{emailLider}}\",\"senha\":\"senhaErrada123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"401 - credenciais inválidas\", () => { pm.response.to.have.status(401); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem genérica\", () => { pm.expect(corpo.mensagem).to.eql(\"E-mail ou senha inválidos\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login com e-mail inexistente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"naoexiste.{{$timestamp}}@beatstage.test\",\"senha\":\"senhaSegura123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"401 - credenciais inválidas\", () => { pm.response.to.have.status(401); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"não revela se o e-mail existe\", () => { pm.expect(corpo.mensagem).to.eql(\"E-mail ou senha inválidos\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login sem senha (Zod)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{emailLider}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400 - dados inválidos\", () => { pm.response.to.have.status(400); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"aponta o campo senha\", () => { pm.expect(corpo.erros.map((e) => e.campo)).to.include(\"senha\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login do líder (guarda o token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{emailLider}}\",\"senha\":\"senhaSegura123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "O token fica na variável tokenLider, usada como auth padrão da coleção."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - login realizado\", () => { pm.response.to.have.status(200); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"token JWT com 3 partes\", () => { pm.expect(corpo.token.split(\".\")).to.have.lengthOf(3); });",
+                  "pm.test(\"não devolve senha nem hash\", () => {",
+                  "  pm.expect(corpo.musico).to.not.have.property(\"senhaHash\");",
+                  "  pm.expect(corpo.musico).to.not.have.property(\"senha\");",
+                  "});",
+                  "pm.collectionVariables.set(\"tokenLider\", corpo.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar músicos autenticado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/musicos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - lista de músicos\", () => { pm.response.to.have.status(200); });",
+                  "const lista = pm.response.json();",
+                  "pm.test(\"retorna um array\", () => { pm.expect(lista).to.be.an(\"array\"); });",
+                  "pm.test(\"contém os músicos criados\", () => {",
+                  "  const ids = lista.map((m) => String(m.idMusico));",
+                  "  pm.expect(ids).to.include(String(pm.collectionVariables.get(\"idLider\")));",
+                  "  pm.expect(ids).to.include(String(pm.collectionVariables.get(\"idMembro1\")));",
+                  "});",
+                  "pm.test(\"não expõe hash de senha\", () => { pm.expect(pm.response.text()).to.not.include(\"senhaHash\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rota protegida sem token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/musicos",
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Esta requisição ignora o token da coleção."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"401 - sem token\", () => { pm.response.to.have.status(401); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem específica\", () => { pm.expect(corpo.mensagem).to.eql(\"Token de acesso não informado\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rota protegida com token inválido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/musicos",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "token.invalido.aqui",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"401 - token inválido\", () => { pm.response.to.have.status(401); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem específica\", () => { pm.expect(corpo.mensagem).to.eql(\"Token inválido ou expirado\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar o próprio perfil",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/musicos/perfil"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - perfil do usuário autenticado\", () => { pm.response.to.have.status(200); });",
+                  "const perfil = pm.response.json();",
+                  "pm.test(\"é o músico do token\", () => { pm.expect(perfil.idMusico).to.eql(Number(pm.collectionVariables.get(\"idLider\"))); });",
+                  "pm.test(\"conta ativa\", () => { pm.expect(perfil.ativo).to.eql(true); });",
+                  "pm.test(\"sem hash de senha\", () => { pm.expect(perfil).to.not.have.property(\"senhaHash\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar o próprio perfil",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/musicos/perfil",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"cargo\":\"Contrabaixista\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - perfil atualizado\", () => { pm.response.to.have.status(200); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"cargo atualizado\", () => { pm.expect(corpo.musico.cargo).to.eql(\"Contrabaixista\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar outro músico pela URL (deve bloquear)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/musicos/{{idMembro1}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"cargo\":\"Hacker\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Trocar o id na URL não permite editar outro músico."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"403 - IDOR bloqueado na alteração\", () => { pm.response.to.have.status(403); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem específica\", () => { pm.expect(corpo.mensagem).to.eql(\"Você só pode alterar ou excluir o seu próprio cadastro\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir outro músico pela URL (deve bloquear)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/musicos/{{idMembro1}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"403 - IDOR bloqueado na exclusão\", () => { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar senha com senha atual errada",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/musicos/perfil/senha",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"senhaAtual\":\"senhaErrada123\",\"novaSenha\":\"senhaNova123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"401 - senha atual incorreta\", () => { pm.response.to.have.status(401); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem específica\", () => { pm.expect(corpo.mensagem).to.eql(\"Senha atual incorreta\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar senha (sucesso)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/musicos/perfil/senha",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"senhaAtual\":\"senhaSegura123\",\"novaSenha\":\"senhaNova123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - senha alterada\", () => { pm.response.to.have.status(200); });",
+                  "pm.test(\"não devolve a senha\", () => { pm.expect(pm.response.text()).to.not.include(\"senhaNova123\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login com a senha antiga (deve falhar)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{emailLider}}\",\"senha\":\"senhaSegura123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"401 - senha antiga não funciona mais\", () => { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login com a senha nova",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{emailLider}}\",\"senha\":\"senhaNova123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - senha nova funciona\", () => { pm.response.to.have.status(200); });",
+                  "pm.test(\"token válido\", () => { pm.expect(pm.response.json().token.split(\".\")).to.have.lengthOf(3); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Banda - CRUD",
+      "description": "Fluxo feliz: cadastrar, listar, buscar, atualizar, trocar líder e membros.",
+      "item": [
+        {
+          "name": "Cadastrar banda",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/bandas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Banda Teste Integrador\",\"descricao\":\"Banda criada pela coleção de testes do BeatStage\",\"idLider\":{{idLider}},\"idMembros\":[{{idMembro1}},{{idMembro2}}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "O codigoConvite não é enviado pelo cliente: o backend gera automaticamente."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 - banda cadastrada\", () => { pm.response.to.have.status(201); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem de sucesso\", () => { pm.expect(corpo.mensagem).to.eql(\"Banda cadastrada com sucesso\"); });",
+                  "pm.test(\"código de convite gerado com 8 caracteres\", () => { pm.expect(corpo.banda.codigoConvite).to.match(/^[A-Z0-9]{8}$/); });",
+                  "pm.test(\"líder gravado\", () => { pm.expect(corpo.banda.idLider).to.eql(Number(pm.collectionVariables.get(\"idLider\"))); });",
+                  "pm.test(\"membros gravados\", () => {",
+                  "  pm.expect(corpo.banda.idMembros.map(String)).to.include(String(pm.collectionVariables.get(\"idMembro1\")));",
+                  "  pm.expect(corpo.banda.idMembros.map(String)).to.include(String(pm.collectionVariables.get(\"idMembro2\")));",
+                  "});",
+                  "pm.collectionVariables.set(\"idBanda\", corpo.banda.idBanda);",
+                  "pm.collectionVariables.set(\"codigoConvite\", corpo.banda.codigoConvite);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar bandas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/bandas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - lista de bandas\", () => { pm.response.to.have.status(200); });",
+                  "const lista = pm.response.json();",
+                  "pm.test(\"contém a banda criada\", () => {",
+                  "  const ids = lista.map((b) => String(b.idBanda));",
+                  "  pm.expect(ids).to.include(String(pm.collectionVariables.get(\"idBanda\")));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar banda por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/bandas/{{idBanda}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - banda encontrada\", () => { pm.response.to.have.status(200); });",
+                  "const banda = pm.response.json();",
+                  "pm.test(\"nome confere\", () => { pm.expect(banda.nome).to.eql(\"Banda Teste Integrador\"); });",
+                  "pm.test(\"traz idMembros como array\", () => { pm.expect(banda.idMembros).to.be.an(\"array\").with.lengthOf(2); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar dados da banda (nome, descrição e membros duplicados)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/bandas/{{idBanda}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Banda Teste Renomeada\",\"descricao\":\"Descrição atualizada pela coleção\",\"idMembros\":[{{idMembro1}},{{idMembro1}},{{idMembro2}}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Envia idMembro1 duas vezes de propósito: o service remove duplicatas."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - banda atualizada\", () => { pm.response.to.have.status(200); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"nome atualizado\", () => { pm.expect(corpo.banda.nome).to.eql(\"Banda Teste Renomeada\"); });",
+                  "pm.test(\"membro repetido foi deduplicado\", () => { pm.expect(corpo.banda.idMembros).to.have.lengthOf(2); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Limpar todos os membros da banda",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/bandas/{{idBanda}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"idMembros\":[]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Array vazio é válido e limpa a tabela Banda_Membro."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - membros removidos\", () => { pm.response.to.have.status(200); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"lista de membros vazia\", () => { pm.expect(corpo.banda.idMembros).to.be.an(\"array\").with.lengthOf(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Restaurar os membros da banda",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/bandas/{{idBanda}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"idMembros\":[{{idMembro1}},{{idMembro2}}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - membros restaurados\", () => { pm.response.to.have.status(200); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"dois membros\", () => { pm.expect(corpo.banda.idMembros).to.have.lengthOf(2); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Banda - validações e erros",
+      "description": "Campos inválidos, líder/membro/banda inexistentes e PATCH vazio.",
+      "item": [
+        {
+          "name": "Payload inválido (nome curto e idLider texto)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/bandas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"B\",\"idLider\":\"abc\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400 - dados inválidos\", () => { pm.response.to.have.status(400); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"lista os dois campos com erro\", () => {",
+                  "  const campos = corpo.erros.map((e) => e.campo);",
+                  "  pm.expect(campos).to.include(\"nome\");",
+                  "  pm.expect(campos).to.include(\"idLider\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sem idLider",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/bandas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Banda Sem Líder\",\"descricao\":\"teste\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400 - dados inválidos\", () => { pm.response.to.have.status(400); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"aponta o campo idLider\", () => { pm.expect(corpo.erros.map((e) => e.campo)).to.include(\"idLider\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Líder inexistente (não é o músico autenticado)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/bandas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Banda Líder Fantasma\",\"idLider\":999999}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"403 - só é possível criar banda em nome próprio\", () => { pm.response.to.have.status(403); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem específica\", () => { pm.expect(corpo.mensagem).to.eql(\"O líder da banda deve ser o músico autenticado\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Membro inexistente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/bandas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Banda Membro Fantasma\",\"idLider\":{{idLider}},\"idMembros\":[999999]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 - músico membro não encontrado\", () => { pm.response.to.have.status(404); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"lista o id ausente\", () => { pm.expect(corpo.mensagem).to.contain(\"999999\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar banda inexistente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/bandas/999999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 - banda não encontrada\", () => { pm.response.to.have.status(404); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem específica\", () => { pm.expect(corpo.mensagem).to.eql(\"Banda não encontrada\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ID de banda inválido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/bandas/abc"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400 - identificador inválido\", () => { pm.response.to.have.status(400); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem específica\", () => { pm.expect(corpo.mensagem).to.eql(\"Identificador de banda inválido\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar banda inexistente",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/bandas/999999",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Banda Inexistente\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 - banda não encontrada\", () => { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar sem nenhum campo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/bandas/{{idBanda}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400 - dados inválidos\", () => { pm.response.to.have.status(400); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"exige pelo menos um campo\", () => { pm.expect(corpo.mensagem).to.eql(\"Dados inválidos\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Trocar para líder inexistente",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/bandas/{{idBanda}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"idLider\":999999}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 - músico líder não encontrado\", () => { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Equipamento - CRUD",
+      "description": "Fluxo feliz: cadastrar com e sem campos opcionais, listar, buscar e atualizar.",
+      "item": [
+        {
+          "name": "Cadastrar equipamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/equipamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Guitarra Gibson Les Paul\",\"estado\":\"PROPRIO\",\"responsavel\":\"Líder Teste\",\"descricao\":\"Guitarra principal\",\"idBanda\":{{idBanda}}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 - equipamento cadastrado\", () => { pm.response.to.have.status(201); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"estado gravado\", () => { pm.expect(corpo.equipamento.estado).to.eql(\"PROPRIO\"); });",
+                  "pm.test(\"vinculado à banda\", () => { pm.expect(corpo.equipamento.idBanda).to.eql(Number(pm.collectionVariables.get(\"idBanda\"))); });",
+                  "pm.collectionVariables.set(\"idEquipamento\", corpo.equipamento.idEquipamento);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cadastrar equipamento sem responsável e sem descrição",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/equipamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Cabo XLR\",\"estado\":\"EMPRESTADO\",\"idBanda\":{{idBanda}}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "responsavel e descricao são opcionais no cadastro."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 - equipamento cadastrado\", () => { pm.response.to.have.status(201); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"responsável nulo\", () => { pm.expect(corpo.equipamento.responsavel).to.be.null; });",
+                  "pm.test(\"descrição nula\", () => { pm.expect(corpo.equipamento.descricao).to.be.null; });",
+                  "pm.collectionVariables.set(\"idEquipamento2\", corpo.equipamento.idEquipamento);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar equipamentos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipamentos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - lista de equipamentos\", () => { pm.response.to.have.status(200); });",
+                  "const lista = pm.response.json();",
+                  "pm.test(\"contém os dois equipamentos criados\", () => {",
+                  "  const ids = lista.map((e) => String(e.idEquipamento));",
+                  "  pm.expect(ids).to.include(String(pm.collectionVariables.get(\"idEquipamento\")));",
+                  "  pm.expect(ids).to.include(String(pm.collectionVariables.get(\"idEquipamento2\")));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar equipamento por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipamentos/{{idEquipamento}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - equipamento encontrado\", () => { pm.response.to.have.status(200); });",
+                  "const equipamento = pm.response.json();",
+                  "pm.test(\"nome confere\", () => { pm.expect(equipamento.nome).to.eql(\"Guitarra Gibson Les Paul\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar equipamento (estado e responsável nulo)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/equipamentos/{{idEquipamento}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"estado\":\"EMPRESTADO\",\"responsavel\":null,\"descricao\":\"Emprestada para o ensaio\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - equipamento atualizado\", () => { pm.response.to.have.status(200); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"estado atualizado\", () => { pm.expect(corpo.equipamento.estado).to.eql(\"EMPRESTADO\"); });",
+                  "pm.test(\"responsável limpo com null\", () => { pm.expect(corpo.equipamento.responsavel).to.be.null; });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Equipamento - validações e erros",
+      "description": "Enum inválido, banda inexistente, campos obrigatórios e PATCH vazio.",
+      "item": [
+        {
+          "name": "Estado inválido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/equipamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Cabo P10\",\"estado\":\"ALUGADO\",\"idBanda\":{{idBanda}}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400 - dados inválidos\", () => { pm.response.to.have.status(400); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"aponta o campo estado\", () => { pm.expect(corpo.erros.map((e) => e.campo)).to.include(\"estado\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sem idBanda",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/equipamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Cabo P10\",\"estado\":\"PROPRIO\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400 - dados inválidos\", () => { pm.response.to.have.status(400); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"aponta o campo idBanda\", () => { pm.expect(corpo.erros.map((e) => e.campo)).to.include(\"idBanda\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Banda inexistente no cadastro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/equipamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Cabo P10\",\"estado\":\"PROPRIO\",\"idBanda\":999999}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 - banda não encontrada\", () => { pm.response.to.have.status(404); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem específica\", () => { pm.expect(corpo.mensagem).to.eql(\"Banda não encontrada\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar para estado inválido",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/equipamentos/{{idEquipamento}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"estado\":\"QUEBRADO\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400 - dados inválidos\", () => { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mover equipamento para banda inexistente",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/equipamentos/{{idEquipamento}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"idBanda\":999999}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 - banda não encontrada\", () => { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar equipamento sem nenhum campo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/equipamentos/{{idEquipamento}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400 - dados inválidos\", () => { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar equipamento inexistente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipamentos/999999"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 - equipamento não encontrado\", () => { pm.response.to.have.status(404); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem específica\", () => { pm.expect(corpo.mensagem).to.eql(\"Equipamento não encontrado\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ID de equipamento inválido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipamentos/abc"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400 - identificador inválido\", () => { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar equipamento inexistente",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/equipamentos/999999",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nome\":\"Equipamento Fantasma\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 - equipamento não encontrado\", () => { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Ensaio, Evento, Repertório, Agenda e Feedback",
+      "description": "CRUD das novas entidades. Criação/alteração/exclusão só pelo líder da banda; leitura para os membros.",
+      "item": [
+        {
+          "name": "Criar ensaio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/ensaios",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"idBanda\":{{idBanda}},\"data\":\"2026-12-01\",\"local\":\"Estúdio A\",\"descricao\":\"Primeiro ensaio\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 - ensaio cadastrado\", () => { pm.response.to.have.status(201); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"vinculado à banda\", () => { pm.expect(corpo.ensaio.idBanda).to.eql(Number(pm.collectionVariables.get(\"idBanda\"))); });",
+                  "pm.collectionVariables.set(\"idEnsaio\", corpo.ensaio.idEnsaio);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar ensaios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/ensaios"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - lista de ensaios\", () => { pm.response.to.have.status(200); });",
+                  "const lista = pm.response.json();",
+                  "pm.test(\"contém o ensaio criado\", () => {",
+                  "  pm.expect(lista.map((e) => String(e.idEnsaio))).to.include(String(pm.collectionVariables.get(\"idEnsaio\")));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar ensaio",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/ensaios/{{idEnsaio}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"local\":\"Estúdio B\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - ensaio atualizado\", () => { pm.response.to.have.status(200); });",
+                  "pm.test(\"local atualizado\", () => { pm.expect(pm.response.json().ensaio.local).to.eql(\"Estúdio B\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar repertório",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/repertorios",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"idBanda\":{{idBanda}},\"musica\":\"Aquarela\",\"tom\":\"Am\",\"musicos\":[{\"idMusico\":{{idMembro1}},\"funcaoMusico\":\"Guitarra\"}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 - repertório cadastrado\", () => { pm.response.to.have.status(201); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"tom salvo\", () => { pm.expect(corpo.repertorio.tom).to.eql(\"Am\"); });",
+                  "pm.test(\"músico com função vinculado\", () => { pm.expect(corpo.repertorio.musicos[0].funcaoMusico).to.eql(\"Guitarra\"); });",
+                  "pm.collectionVariables.set(\"idRepertorio\", corpo.repertorio.idRepertorio);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar evento com equipamento e repertório",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/eventos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"idBanda\":{{idBanda}},\"nome\":\"Show de Verão\",\"data\":\"2026-12-15\",\"local\":\"Praça Central\",\"idEquipamentos\":[{{idEquipamento2}}],\"idRepertorios\":[{{idRepertorio}}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 - evento cadastrado\", () => { pm.response.to.have.status(201); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"equipamento vinculado\", () => { pm.expect(corpo.evento.idEquipamentos).to.have.lengthOf(1); });",
+                  "pm.test(\"repertório vinculado\", () => { pm.expect(corpo.evento.idRepertorios).to.have.lengthOf(1); });",
+                  "pm.collectionVariables.set(\"idEvento\", corpo.evento.idEvento);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar agenda individual",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/agendas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"titulo\":\"Aula particular\",\"data\":\"2026-12-02\",\"horario\":\"20:30\",\"tipoAgenda\":\"INDIVIDUAL\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 - agenda individual criada\", () => { pm.response.to.have.status(201); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"pertence ao criador\", () => { pm.expect(corpo.agenda.idMusico).to.eql(Number(pm.collectionVariables.get(\"idLider\"))); });",
+                  "pm.collectionVariables.set(\"idAgenda\", corpo.agenda.idAgenda);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar agenda da banda",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/agendas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"titulo\":\"Ensaio geral\",\"data\":\"2026-12-03\",\"horario\":\"19:00\",\"tipoAgenda\":\"BANDA\",\"idBanda\":{{idBanda}}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 - agenda da banda criada\", () => { pm.response.to.have.status(201); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"visibilidade BANDA\", () => { pm.expect(corpo.agenda.visibilidade).to.eql(\"BANDA\"); });",
+                  "pm.collectionVariables.set(\"idAgendaBanda\", corpo.agenda.idAgenda);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar agendas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/agendas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - lista de agendas\", () => { pm.response.to.have.status(200); });",
+                  "const lista = pm.response.json();",
+                  "pm.test(\"contém as duas agendas\", () => {",
+                  "  pm.expect(lista.map((a) => String(a.idAgenda))).to.include(String(pm.collectionVariables.get(\"idAgenda\")));",
+                  "  pm.expect(lista.map((a) => String(a.idAgenda))).to.include(String(pm.collectionVariables.get(\"idAgendaBanda\")));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Enviar feedback anônimo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/feedbacks",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"idBanda\":{{idBanda}},\"comentario\":\"Som muito bom\",\"anonimo\":true}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 - feedback enviado\", () => { pm.response.to.have.status(201); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"autor oculto\", () => { pm.expect(corpo.feedback.idMusico).to.be.null; });",
+                  "pm.collectionVariables.set(\"idFeedback\", corpo.feedback.idFeedback);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar feedbacks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/feedbacks"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - lista de feedbacks\", () => { pm.response.to.have.status(200); });",
+                  "const lista = pm.response.json();",
+                  "const feedback = lista.find((f) => String(f.idFeedback) === String(pm.collectionVariables.get(\"idFeedback\")));",
+                  "pm.test(\"feedback anônimo sem autor na listagem\", () => { pm.expect(feedback.idMusico).to.be.null; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir ensaio (exclusão lógica)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/ensaios/{{idEnsaio}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - ensaio inativado\", () => { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar ensaio excluído",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/ensaios/{{idEnsaio}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 - ensaio não existe mais para a API\", () => { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8. Integridade e exclusão",
+      "description": "FK do líder (409), exclusão de equipamento, cascata ao excluir a banda e limpeza final.",
+      "item": [
+        {
+          "name": "Excluir músico líder de banda (deve bloquear)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/musicos/{{idLider}}",
+            "description": "A FK Banda.idLider é ON DELETE RESTRICT: o músico não pode ser excluído."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"409 - conflito de integridade\", () => { pm.response.to.have.status(409); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"explica que precisa resolver a banda\", () => { pm.expect(corpo.mensagem).to.contain(\"liderança\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir equipamento",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/equipamentos/{{idEquipamento}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - equipamento excluído\", () => { pm.response.to.have.status(200); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem de sucesso\", () => { pm.expect(corpo.mensagem).to.eql(\"Equipamento excluído com sucesso\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir o mesmo equipamento novamente",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/equipamentos/{{idEquipamento}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 - equipamento não encontrado\", () => { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir banda",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/bandas/{{idBanda}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - banda excluída\", () => { pm.response.to.have.status(200); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem de sucesso\", () => { pm.expect(corpo.mensagem).to.eql(\"Banda excluída com sucesso\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar a banda excluída",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/bandas/{{idBanda}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 - banda não encontrada\", () => { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Evento inativado em cascata com a banda",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/eventos/{{idEvento}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 - evento inativado pela cascata\", () => { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Equipamento removido em cascata com a banda",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/equipamentos/{{idEquipamento2}}",
+            "description": "O segundo equipamento não foi excluído manualmente: sumiu junto com a banda."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 - equipamento removido pela cascata\", () => { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir músico membro 1 com o token do líder (403)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/musicos/{{idMembro1}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"403 - líder não pode excluir outro músico\", () => { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login do membro 1 (guarda o token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{emailMembro1}}\",\"senha\":\"senhaSegura123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - login do membro 1\", () => { pm.response.to.have.status(200); });",
+                  "pm.collectionVariables.set(\"tokenMembro1\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Membro 1 exclui o próprio cadastro",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/musicos/{{idMembro1}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMembro1}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - exclusão do próprio cadastro\", () => { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login do membro 2 (guarda o token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{emailMembro2}}\",\"senha\":\"senhaSegura123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - login do membro 2\", () => { pm.response.to.have.status(200); });",
+                  "pm.collectionVariables.set(\"tokenMembro2\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Membro 2 exclui o próprio cadastro",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/musicos/{{idMembro2}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMembro2}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - exclusão do próprio cadastro\", () => { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar músicos ao final",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/musicos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - lista final\", () => { pm.response.to.have.status(200); });",
+                  "const lista = pm.response.json();",
+                  "pm.test(\"membros removidos e líder ainda presente\", () => {",
+                  "  const ids = lista.map((m) => String(m.idMusico));",
+                  "  pm.expect(ids).to.not.include(String(pm.collectionVariables.get(\"idMembro1\")));",
+                  "  pm.expect(ids).to.not.include(String(pm.collectionVariables.get(\"idMembro2\")));",
+                  "  pm.expect(ids).to.include(String(pm.collectionVariables.get(\"idLider\")));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir músico líder (agora sem banda)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/musicos/{{idLider}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 - exclusão do próprio cadastro\", () => { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "9. Erros gerais da API",
+      "description": "JSON malformado e rota inexistente.",
+      "item": [
+        {
+          "name": "JSON malformado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/musicos",
+            "body": {
+              "mode": "raw",
+              "raw": "{nome:",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400 - json inválido\", () => { pm.response.to.have.status(400); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem específica\", () => { pm.expect(corpo.mensagem).to.eql(\"Corpo da requisição não é um JSON válido\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rota inexistente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/naoexiste"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 - rota não encontrada\", () => { pm.response.to.have.status(404); });",
+                  "const corpo = pm.response.json();",
+                  "pm.test(\"mensagem específica\", () => { pm.expect(corpo.mensagem).to.eql(\"Rota não encontrada\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{tokenLider}}",
+        "type": "string"
+      }
+    ]
+  }
+}
