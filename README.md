@@ -1,4 +1,5 @@
 # BeatStage
+<<<<<<< HEAD
 
 Frontend completo do BeatStage, integrado ao backend Express/Prisma existente e validado com dados reais persistidos em PostgreSQL.
 
@@ -555,3 +556,6 @@ Capturas adicionais: [login](refs/screens/01-login.png) · [repertório](refs/sc
 - [x] Testes ponta a ponta com dados persistidos
 - [x] Build de produção
 - [x] Documentação de execução, divergências e limitações
+=======
+projeto Beatstage completo com frontend
+>>>>>>> 7c7de867dc1bade0cdea679cff55f97029108c8a
