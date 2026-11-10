@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Clock,
@@ -14,6 +14,7 @@ import { Button } from "../components/ui/Button";
 import { SearchInput } from "../components/ui/SearchInput";
 import { Field, Input, Select, Textarea } from "../components/ui/Field";
 import { Modal } from "../components/ui/Modal";
+import { MusicAutocomplete } from "../components/ui/MusicAutocomplete";
 import { Badge } from "../components/ui/Badge";
 import { Avatar } from "../components/ui/Avatar";
 import { EmptyState } from "../components/ui/EmptyState";
@@ -29,6 +30,8 @@ import {
   queryKeys
 } from "../hooks/queries";
 import { repertoriosService } from "../services/repertorios.service";
+import type { SugestaoMusica } from "../services/musicas.service";
+import { tomService } from "../lib/tom";
 import {
   formatDuration,
   formatTotalDuration,
@@ -84,6 +87,9 @@ function SongFormModal({
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [detectandoTom, setDetectandoTom] = useState(false);
+  const [tomAutomatico, setTomAutomatico] = useState(false);
+  const tomEditadoRef = useRef(false);
 
   const bandaSelecionada = bandas.find((banda) => String(banda.idBanda) === idBanda);
   const membrosDaBanda = bandaSelecionada
@@ -91,6 +97,29 @@ function SongFormModal({
         .map((id) => musicos.find((musico) => musico.idMusico === id))
         .filter((musico): musico is Musico => Boolean(musico))
     : [];
+
+  /** Preenche artista, duração e tom a partir da sugestão escolhida. */
+  function aplicarSugestao(sugestao: SugestaoMusica) {
+    setNome(sugestao.titulo);
+    setArtista(sugestao.artista);
+    if (sugestao.duracaoSegundos) setDuracao(secondsToInput(sugestao.duracaoSegundos));
+    setErrors((current) => ({ ...current, musica: undefined }));
+
+    tomEditadoRef.current = false;
+    setTomAutomatico(false);
+
+    if (!sugestao.previewUrl) return;
+
+    setDetectandoTom(true);
+    void tomService
+      .detectar(sugestao.previewUrl)
+      .then((tom) => {
+        if (!tom || tomEditadoRef.current) return;
+        setTom(tom);
+        setTomAutomatico(true);
+      })
+      .finally(() => setDetectandoTom(false));
+  }
 
   function toggleMusico(id: number) {
     setSelecionados((current) => {
@@ -225,14 +254,21 @@ function SongFormModal({
         </div>
 
         <div className="form-grid form-grid--two">
-          <Field label="Nome da música" htmlFor="musica-nome" error={errors.musica} required>
-            <Input
+          <Field
+            label="Nome da música"
+            htmlFor="musica-nome"
+            error={errors.musica}
+            hint="Digite e escolha uma sugestão para preencher artista, duração e tom."
+            required
+          >
+            <MusicAutocomplete
               id="musica-nome"
-              data-autofocus
               value={nome}
               placeholder="Ex.: Tempo Perdido"
               invalid={Boolean(errors.musica)}
-              onChange={(event) => setNome(event.target.value)}
+              autoFocus
+              onChange={setNome}
+              onSelect={aplicarSugestao}
             />
           </Field>
 
@@ -251,8 +287,27 @@ function SongFormModal({
         </div>
 
         <div className="form-grid form-grid--two">
-          <Field label="Tom musical" htmlFor="musica-tom" error={errors.tom}>
-            <Select id="musica-tom" value={tom} onChange={(event) => setTom(event.target.value)}>
+          <Field
+            label="Tom musical"
+            htmlFor="musica-tom"
+            error={errors.tom}
+            hint={
+              detectandoTom
+                ? "Analisando a prévia do áudio para estimar o tom…"
+                : tomAutomatico
+                  ? "Tom estimado a partir da prévia do áudio — confira antes de salvar."
+                  : "Escolha uma sugestão acima para o tom ser preenchido automaticamente."
+            }
+          >
+            <Select
+              id="musica-tom"
+              value={tom}
+              onChange={(event) => {
+                setTom(event.target.value);
+                setTomAutomatico(false);
+                tomEditadoRef.current = true;
+              }}
+            >
               <option value="">Não definido</option>
               {TONS_MUSICAIS.map((tonalidade) => (
                 <option key={tonalidade} value={tonalidade}>

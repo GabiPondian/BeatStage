@@ -10,36 +10,16 @@
 }
 
 .logo__mark {
-  display: inline-grid;
-  grid-template-columns: repeat(4, 3px);
-  align-items: end;
-  gap: 3px;
+  display: block;
   width: 34px;
   height: 34px;
-  padding: 8px;
   border-radius: 10px;
-  background: linear-gradient(145deg, #8b5cf6, #5b21b6);
-  box-shadow: 0 8px 18px rgba(91, 33, 182, 0.35);
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
-.logo__mark span {
-  display: block;
-  width: 3px;
-  border-radius: 2px;
-  background: var(--yellow);
-}
-
-.logo__mark span:nth-child(1) {
-  height: 7px;
-}
-.logo__mark span:nth-child(2) {
-  height: 13px;
-}
-.logo__mark span:nth-child(3) {
-  height: 9px;
-}
-.logo__mark span:nth-child(4) {
-  height: 15px;
+.logo:hover .logo__mark {
+  filter: brightness(1.06);
 }
 
 .logo__word {
@@ -56,7 +36,6 @@
 .logo--sm .logo__mark {
   width: 30px;
   height: 30px;
-  padding: 7px;
   border-radius: 9px;
 }
 .logo--sm .logo__word {
@@ -66,13 +45,7 @@
 .logo--lg .logo__mark {
   width: 44px;
   height: 44px;
-  padding: 10px;
   border-radius: 13px;
-  grid-template-columns: repeat(4, 4px);
-  gap: 4px;
-}
-.logo--lg .logo__mark span {
-  width: 4px;
 }
 .logo--lg .logo__word {
   font-size: 24px;

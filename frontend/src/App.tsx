@@ -17,6 +17,7 @@ import { RepertoirePage } from "./pages/RepertoirePage";
 import { EventsPage } from "./pages/EventsPage";
 import { EventDetailPage } from "./pages/EventDetailPage";
 import { RehearsalsPage } from "./pages/RehearsalsPage";
+import { RehearsalDetailPage } from "./pages/RehearsalDetailPage";
 import { EquipmentPage } from "./pages/EquipmentPage";
 import { FeedbackPage } from "./pages/FeedbackPage";
 import { ProfilePage } from "./pages/ProfilePage";
@@ -62,6 +63,7 @@ export function App() {
             <Route path="/eventos" element={<EventsPage />} />
             <Route path="/eventos/:id" element={<EventDetailPage />} />
             <Route path="/ensaios" element={<RehearsalsPage />} />
+            <Route path="/ensaios/:id" element={<RehearsalDetailPage />} />
             <Route path="/equipamentos" element={<EquipmentPage />} />
             <Route path="/feedback" element={<FeedbackPage />} />
             <Route path="/perfil" element={<ProfilePage />} />

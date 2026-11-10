@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   CalendarDays,
   Check,
-  Clock,
+  ChevronRight,
   MapPin,
   Mic2,
   Pencil,
@@ -206,7 +207,11 @@ export function RehearsalsPage() {
                 <DateBadge date={ensaio.data} variant="purple" size="md" />
                 <div className="rehearsal-card__body">
                   <div className="rehearsal-card__title">
-                    <h2>{ensaio.descricao?.trim() || "Ensaio da banda"}</h2>
+                    <h2>
+                      <Link to={`/ensaios/${ensaio.idEnsaio}`}>
+                        {ensaio.descricao?.trim() || "Ensaio da banda"}
+                      </Link>
+                    </h2>
                     <Badge tone={isPastDate(ensaio.data) ? "neutral" : diff === 0 ? "yellow" : "purple"}>
                       {contexto}
                     </Badge>
@@ -249,9 +254,22 @@ export function RehearsalsPage() {
                     >
                       <Trash2 size={16} />
                     </button>
+                    <Link
+                      to={`/ensaios/${ensaio.idEnsaio}`}
+                      className="icon-button"
+                      aria-label="Ver detalhes do ensaio"
+                    >
+                      <ChevronRight size={16} />
+                    </Link>
                   </div>
                 ) : (
-                  <Clock size={16} className="muted" />
+                  <Link
+                    to={`/ensaios/${ensaio.idEnsaio}`}
+                    className="icon-button"
+                    aria-label="Ver detalhes do ensaio"
+                  >
+                    <ChevronRight size={16} />
+                  </Link>
                 )}
               </article>
             );
@@ -277,7 +295,7 @@ export function RehearsalsPage() {
   );
 }
 
-function RehearsalFormModal({
+export function RehearsalFormModal({
   mode,
   ensaio,
   bandas,
