@@ -194,6 +194,33 @@ export function formatHorario(horario: string): string {
   return horario;
 }
 
+export function formatDateTimeShort(value: string): string {
+  const date = new Date(value);
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(date);
+}
+
+/** "agora", "há 3 min", "há 2 h" ou data/hora para notificações. */
+export function formatRelativeTime(value: string): string {
+  const date = new Date(value).getTime();
+
+  if (Number.isNaN(date)) return "";
+
+  const diff = Date.now() - date;
+
+  if (diff < 60_000) return "agora";
+  if (diff < 3_600_000) return `há ${Math.floor(diff / 60_000)} min`;
+  if (diff < 86_400_000) return `há ${Math.floor(diff / 3_600_000)} h`;
+  if (diff < 172_800_000) return "ontem";
+
+  return formatDateTimeShort(value);
+}
+
 export function sortByDateAndTime<
   T extends { horario?: string | null; data?: string; date?: string }
 >(items: T[]): T[] {

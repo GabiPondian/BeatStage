@@ -11,6 +11,7 @@ import { exigirLiderDaBanda } from "./acessoBandaService";
 const selecaoRepertorio = {
   idRepertorio: true,
   musica: true,
+  artista: true,
   tom: true,
   duracaoSegundos: true,
   observacao: true,
@@ -29,6 +30,7 @@ function formatarRepertorio(repertorio: RepertorioComMusicos) {
   return {
     idRepertorio: repertorio.idRepertorio,
     musica: repertorio.musica,
+    artista: repertorio.artista,
     tom: repertorio.tom,
     duracaoSegundos: repertorio.duracaoSegundos,
     observacao: repertorio.observacao,
@@ -104,6 +106,7 @@ export async function cadastrarRepertorio(
     data: {
       idBanda: dados.idBanda,
       musica: dados.musica,
+      artista: dados.artista,
       tom: dados.tom,
       duracaoSegundos: dados.duracaoSegundos,
       observacao: dados.observacao,
@@ -187,6 +190,7 @@ export async function atualizarRepertorio(
 
   const dadosAtualizados: {
     musica?: string;
+    artista?: string | null;
     tom?: string | null;
     duracaoSegundos?: number | null;
     observacao?: string | null;
@@ -194,6 +198,10 @@ export async function atualizarRepertorio(
 
   if (campos.musica !== undefined) {
     dadosAtualizados.musica = campos.musica;
+  }
+
+  if (campos.artista !== undefined) {
+    dadosAtualizados.artista = campos.artista;
   }
 
   if (campos.tom !== undefined) {

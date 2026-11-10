@@ -131,6 +131,7 @@ async function main() {
     const musicas = [
       {
         musica: "Aonde Quer Que Eu Vá",
+        artista: "Os Paralamas do Sucesso",
         tom: "Bb",
         duracaoSegundos: 234,
         observacao: "Abre o show. Entrada de guitarra limpa.",
@@ -138,6 +139,7 @@ async function main() {
       },
       {
         musica: "O Sol",
+        artista: "Jota Quest",
         tom: "G",
         duracaoSegundos: 198,
         observacao: "Refrão em uníssono com a plateia.",
@@ -145,6 +147,7 @@ async function main() {
       },
       {
         musica: "Tempo Perdido",
+        artista: "Legião Urbana",
         tom: "Em",
         duracaoSegundos: 226,
         observacao: "Puxa o público para o refrão final.",
@@ -152,6 +155,7 @@ async function main() {
       },
       {
         musica: "Exagerado",
+        artista: "Cazuza",
         tom: "C",
         duracaoSegundos: 210,
         observacao: "Versão mais lenta, com teclado em destaque.",
@@ -159,6 +163,7 @@ async function main() {
       },
       {
         musica: "Como É Grande o Meu Amor por Você",
+        artista: "Roberto Carlos",
         tom: "F",
         duracaoSegundos: 255,
         observacao: "Balada. Solo de guitarra no segundo refrão.",
@@ -166,6 +171,7 @@ async function main() {
       },
       {
         musica: "Proibida pra Mim",
+        artista: "Charlie Brown Jr.",
         tom: "A",
         duracaoSegundos: 182,
         observacao: "Entrada direta, sem contagem.",
@@ -173,6 +179,7 @@ async function main() {
       },
       {
         musica: "Dias de Luta, Dias de Glória",
+        artista: "Charlie Brown Jr.",
         tom: "Dm",
         duracaoSegundos: 205,
         observacao: "Participação do público no refrão.",
@@ -180,6 +187,7 @@ async function main() {
       },
       {
         musica: "Céu Azul",
+        artista: "Charlie Brown Jr.",
         tom: "C#m",
         duracaoSegundos: 240,
         observacao: "Encerramento. Solta a guitarra no final.",
@@ -194,6 +202,7 @@ async function main() {
         body: {
           idBanda: banda.idBanda,
           musica: musica.musica,
+          artista: musica.artista,
           tom: musica.tom,
           duracaoSegundos: musica.duracaoSegundos,
           observacao: musica.observacao,

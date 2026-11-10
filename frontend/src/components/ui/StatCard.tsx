@@ -1,4 +1,6 @@
 import type { LucideIcon } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface StatCardProps {
   icon: LucideIcon;
@@ -6,6 +8,7 @@ interface StatCardProps {
   value: string | number;
   hint?: string;
   tone?: "purple" | "yellow" | "green" | "pink";
+  to?: string;
 }
 
 export function StatCard({
@@ -13,18 +16,32 @@ export function StatCard({
   label,
   value,
   hint,
-  tone = "purple"
+  tone = "purple",
+  to
 }: StatCardProps) {
-  return (
-    <div className={`card stat-card stat-card--${tone}`}>
+  const conteudo = (
+    <>
       <span className="stat-card__icon">
         <Icon size={18} />
       </span>
-      <div>
+      <div className="stat-card__content">
         <span className="stat-card__label">{label}</span>
         <strong className="stat-card__value">{value}</strong>
         {hint ? <span className="stat-card__hint">{hint}</span> : null}
       </div>
-    </div>
+      {to ? <ArrowUpRight className="stat-card__arrow" size={17} aria-hidden="true" /> : null}
+    </>
   );
+
+  const classes = `card stat-card stat-card--${tone}${to ? " stat-card--link" : ""}`;
+
+  if (to) {
+    return (
+      <Link to={to} className={classes} aria-label={`${label}: abrir página`}>
+        {conteudo}
+      </Link>
+    );
+  }
+
+  return <div className={classes}>{conteudo}</div>;
 }

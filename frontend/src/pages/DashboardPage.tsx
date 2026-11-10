@@ -336,6 +336,7 @@ export function DashboardPage() {
               value={repertorios.length}
               hint={`${repertorios.filter((item) => item.tom).length} com tom definido`}
               tone="purple"
+              to="/repertorio"
             />
             <StatCard
               icon={Guitar}
@@ -343,6 +344,7 @@ export function DashboardPage() {
               value={proximosEventos}
               hint={`${eventos.length} no total`}
               tone="yellow"
+              to="/eventos"
             />
             <StatCard
               icon={Mic2}
@@ -350,6 +352,7 @@ export function DashboardPage() {
               value={ensaiosFuturos}
               hint="Próximos encontros da banda"
               tone="green"
+              to="/ensaios"
             />
           </>
         )}

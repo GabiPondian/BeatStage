@@ -20,6 +20,12 @@ export const repertorioSchema = z.object({
     .trim()
     .min(2, "O nome da música deve ter pelo menos 2 caracteres")
     .max(200, "O nome da música deve ter no máximo 200 caracteres"),
+  artista: z
+    .string()
+    .trim()
+    .min(1, "O artista deve ter pelo menos 1 caractere")
+    .max(150, "O artista deve ter no máximo 150 caracteres")
+    .optional(),
   tom: tomMusicalSchema.optional(),
   duracaoSegundos: z
     .number({ error: "Informe a duração em segundos" })
@@ -39,6 +45,7 @@ export const repertorioSchema = z.object({
 export const atualizarRepertorioSchema = z
   .object({
     musica: z.string().trim().min(2).max(200).optional(),
+    artista: z.string().trim().min(1).max(150).nullable().optional(),
     tom: tomMusicalSchema.nullable().optional(),
     duracaoSegundos: z
       .number()

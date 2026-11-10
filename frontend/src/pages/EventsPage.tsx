@@ -11,6 +11,7 @@ import {
   Music2,
   Pencil,
   Plus,
+  Radio,
   Speaker,
   Trash2
 } from "lucide-react";
@@ -275,6 +276,14 @@ export function EventsPage() {
                   <Link to={`/eventos/${evento.idEvento}`} className="btn btn--ghost btn--sm">
                     <span>Ver evento</span>
                     <ArrowRight size={14} />
+                  </Link>
+                  <Link
+                    to={`/ao-vivo/${evento.idEvento}`}
+                    className="icon-button"
+                    aria-label={`Abrir modo ao vivo de ${evento.nome}`}
+                    title="Modo ao vivo"
+                  >
+                    <Radio size={16} />
                   </Link>
                   {podeEditar ? (
                     <>

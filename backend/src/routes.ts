@@ -79,6 +79,22 @@ import {
   deletarFeedbackController
 } from "./controllers/feedbackController";
 
+//MODO AO VIVO
+import {
+  estadoAoVivoController,
+  controlarAoVivoController,
+  cutucarAoVivoController,
+  streamAoVivoController
+} from "./controllers/aoVivoController";
+
+//NOTIFICAÇÕES
+import {
+  listarNotificacoesController,
+  marcarNotificacaoLidaController,
+  marcarTodasNotificacoesLidasController,
+  streamNotificacoesController
+} from "./controllers/notificacaoController";
+
 import { validarBody } from "./middlewares/validateMiddleware";
 import { autenticar } from "./middlewares/authMiddleware";
 import { autorizarMusicoProprio } from "./middlewares/authorizationMiddleware";
@@ -105,6 +121,10 @@ import {
   feedbackSchema,
   atualizarFeedbackSchema
 } from "./schemas/feedbackSchema";
+import {
+  controlarAoVivoSchema,
+  cutucarSchema
+} from "./schemas/aoVivoSchema";
 
 const routes = Router();
 
@@ -330,5 +350,51 @@ routes.patch(
 
 //ROTA DE DELETAR FEEDBACK (EXCLUSÃO LÓGICA, AUTOR OU LÍDER)
 routes.delete("/feedbacks/:id", autenticar, deletarFeedbackController);
+
+// ==================== MODO AO VIVO ====================
+
+//ESTADO ATUAL DO PALCO (QUALQUER PARTICIPANTE DO EVENTO)
+routes.get("/ao-vivo/:idEvento", autenticar, estadoAoVivoController);
+
+//STREAM SSE DO ESTADO DO PALCO
+routes.get("/ao-vivo/:idEvento/stream", autenticar, streamAoVivoController);
+
+//CONTROLE DO PALCO (SOMENTE O LÍDER DA BANDA)
+routes.patch(
+  "/ao-vivo/:idEvento",
+  autenticar,
+  validarBody(controlarAoVivoSchema),
+  controlarAoVivoController
+);
+
+//CUTUCAR/ALERTAR UM MÚSICO (OU A BANDA INTEIRA, SE LÍDER)
+routes.post(
+  "/ao-vivo/:idEvento/cutucar",
+  autenticar,
+  validarBody(cutucarSchema),
+  cutucarAoVivoController
+);
+
+// ==================== NOTIFICAÇÕES ====================
+
+//STREAM SSE DE NOTIFICAÇÕES DO MÚSICO
+routes.get("/notificacoes/stream", autenticar, streamNotificacoesController);
+
+//MARCAR TODAS COMO LIDAS (ANTES DE "/:id/lida")
+routes.patch(
+  "/notificacoes/lidas",
+  autenticar,
+  marcarTodasNotificacoesLidasController
+);
+
+//LISTAR NOTIFICAÇÕES DO MÚSICO
+routes.get("/notificacoes", autenticar, listarNotificacoesController);
+
+//MARCAR UMA NOTIFICAÇÃO COMO LIDA
+routes.patch(
+  "/notificacoes/:id/lida",
+  autenticar,
+  marcarNotificacaoLidaController
+);
 
 export default routes;

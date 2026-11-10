@@ -13,6 +13,7 @@ import "./styles/pages.css";
 import { App } from "./App";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
+import { NotificationStreamProvider } from "./contexts/NotificationStreamContext";
 import { ConfirmProvider } from "./contexts/ConfirmContext";
 
 const queryClient = new QueryClient({
@@ -33,9 +34,11 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ToastProvider>
-          <ConfirmProvider>
-            <App />
-          </ConfirmProvider>
+          <NotificationStreamProvider>
+            <ConfirmProvider>
+              <App />
+            </ConfirmProvider>
+          </NotificationStreamProvider>
         </ToastProvider>
       </AuthProvider>
     </QueryClientProvider>

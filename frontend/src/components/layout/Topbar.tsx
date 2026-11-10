@@ -1,26 +1,44 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Bell,
+  BellRing,
   CalendarDays,
   ChevronDown,
   Guitar,
+  Hand,
   LogOut,
   Menu,
   Mic2,
+  Music2,
   UserRound
 } from "lucide-react";
 import { Avatar } from "../ui/Avatar";
 import { useAuth } from "../../contexts/AuthContext";
-import { useAgendas, useBandas, useEnsaios, useEventos } from "../../hooks/queries";
+import { useToast } from "../../contexts/ToastContext";
+import {
+  useAgendas,
+  useBandas,
+  useEnsaios,
+  useEventos,
+  useNotificacoes,
+  queryKeys
+} from "../../hooks/queries";
 import { ledBands } from "../../lib/permissions";
 import {
-  daysUntil,
   firstName,
   formatDateShort,
+  formatRelativeTime,
   parseDateOnly,
   sortByDateAndTime
 } from "../../lib/format";
+import {
+  permissaoNotificacao,
+  pedirPermissaoNotificacao
+} from "../../lib/browserNotifications";
+import { notificacoesService } from "../../services/notificacoes.service";
+import type { Notificacao } from "../../types/api";
 
 interface TopbarProps {
   onOpenMenu: () => void;
@@ -59,12 +77,21 @@ function titleFor(pathname: string): string {
   return TITLES[first] ?? "BeatStage";
 }
 
+function IconeNotificacao({ tipo }: { tipo: Notificacao["tipo"] }) {
+  if (tipo === "ENTRADA") return <Music2 size={15} />;
+  if (tipo === "CUTUCAR") return <Hand size={15} />;
+  return <BellRing size={15} />;
+}
+
 export function Topbar({ onOpenMenu }: TopbarProps) {
   const { user, logout } = useAuth();
+  const toast = useToast();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [permissao, setPermissao] = useState(permissaoNotificacao());
   const userMenuRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
 
@@ -72,6 +99,29 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
   const { data: eventos } = useEventos();
   const { data: ensaios } = useEnsaios();
   const { data: agendas } = useAgendas();
+  const { data: notificacoes } = useNotificacoes();
+
+  const listaNotificacoes = notificacoes ?? [];
+  const naoLidas = listaNotificacoes.filter((item) => !item.lida).length;
+
+  const marcarLida = useMutation({
+    mutationFn: (id: number) => notificacoesService.marcarLida(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.notificacoes });
+    }
+  });
+
+  const marcarTodas = useMutation({
+    mutationFn: () => notificacoesService.marcarTodasLidas(),
+    onSuccess: (resposta) => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.notificacoes });
+      toast.success(
+        "Notificações lidas",
+        `${resposta.quantidade} ${resposta.quantidade === 1 ? "aviso" : "avisos"} marcados como lidos.`
+      );
+    },
+    onError: () => toast.error("Não foi possível atualizar as notificações")
+  });
 
   const bandaMap = useMemo(
     () => new Map((bandas ?? []).map((banda) => [banda.idBanda, banda.nome])),
@@ -125,10 +175,8 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
       });
     }
 
-    return sortByDateAndTime(items).slice(0, 8);
+    return sortByDateAndTime(items).slice(0, 6);
   }, [eventos, ensaios, agendas, bandaMap]);
-
-  const unread = reminders.filter((item) => daysUntil(item.date) <= 7).length;
 
   useEffect(() => {
     const handler = (event: MouseEvent) => {
@@ -154,6 +202,39 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
 
   const lider = ledBands(bandas ?? [], user.idMusico).length > 0;
 
+  function abrirNotificacao(notificacao: Notificacao) {
+    if (!notificacao.lida) {
+      marcarLida.mutate(notificacao.idNotificacao);
+    }
+
+    setNotificationsOpen(false);
+
+    if (notificacao.idEvento) {
+      navigate(`/ao-vivo/${notificacao.idEvento}`);
+    } else if (notificacao.idBanda) {
+      navigate(`/bandas/${notificacao.idBanda}`);
+    }
+  }
+
+  async function ativarNotificacoesNavegador() {
+    const resultado = await pedirPermissaoNotificacao();
+    setPermissao(resultado);
+
+    if (resultado === "granted") {
+      toast.success(
+        "Notificações do navegador ativadas",
+        "Você será avisado mesmo com o BeatStage em outra aba."
+      );
+    } else if (resultado === "denied") {
+      toast.error(
+        "Notificações bloqueadas",
+        "Libere as notificações nas permissões do navegador."
+      );
+    } else if (resultado === "indisponivel") {
+      toast.info("Este navegador não suporta notificações nativas");
+    }
+  }
+
   return (
     <header className="topbar">
       <div className="topbar__left">
@@ -177,20 +258,97 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
           <button
             type="button"
             className="icon-button topbar__bell"
-            aria-label={`Avisos (${unread})`}
+            aria-label={`Notificações (${naoLidas})`}
             aria-expanded={notificationsOpen}
             onClick={() => setNotificationsOpen((open) => !open)}
           >
             <Bell size={19} />
-            {unread > 0 ? <span className="topbar__bell-dot">{unread}</span> : null}
+            {naoLidas > 0 ? <span className="topbar__bell-dot">{naoLidas}</span> : null}
           </button>
 
           {notificationsOpen ? (
             <div className="popover popover--notifications">
               <div className="popover__head">
-                <strong>Avisos do palco</strong>
-                <span>{unread} nos próximos 7 dias</span>
+                <strong>Notificações</strong>
+                <span>
+                  {naoLidas} {naoLidas === 1 ? "não lida" : "não lidas"} ·{" "}
+                  {listaNotificacoes.length} no total
+                </span>
               </div>
+
+              {listaNotificacoes.length === 0 ? (
+                <p className="popover__empty">
+                  Nenhuma notificação ainda. As entradas e cutucadas do palco aparecem aqui.
+                </p>
+              ) : (
+                <ul className="notification-feed">
+                  {listaNotificacoes.slice(0, 8).map((notificacao) => (
+                    <li key={notificacao.idNotificacao}>
+                      <button
+                        type="button"
+                        className={`notification-item ${notificacao.lida ? "" : "is-unread"}`}
+                        onClick={() => abrirNotificacao(notificacao)}
+                      >
+                        <span
+                          className={`notification-item__icon notification-item__icon--${notificacao.tipo.toLowerCase()}`}
+                        >
+                          <IconeNotificacao tipo={notificacao.tipo} />
+                        </span>
+                        <span className="notification-item__body">
+                          <strong>{notificacao.titulo}</strong>
+                          <span>{notificacao.mensagem}</span>
+                          <small>
+                            {formatRelativeTime(notificacao.criadoEm)}
+                            {notificacao.evento ? ` · ${notificacao.evento}` : ""}
+                          </small>
+                        </span>
+                        {!notificacao.lida ? (
+                          <span className="notification-item__dot" aria-label="Não lida" />
+                        ) : null}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="notification-actions">
+                {naoLidas > 0 ? (
+                  <button
+                    type="button"
+                    className="notification-actions__button"
+                    onClick={() => marcarTodas.mutate()}
+                    disabled={marcarTodas.isPending}
+                  >
+                    Marcar todas como lidas
+                  </button>
+                ) : null}
+
+                {permissao === "default" ? (
+                  <button
+                    type="button"
+                    className="notification-actions__button"
+                    onClick={() => void ativarNotificacoesNavegador()}
+                  >
+                    Ativar notificações do navegador
+                  </button>
+                ) : permissao === "granted" ? (
+                  <span className="notification-actions__status">
+                    Notificações do navegador ativas
+                  </span>
+                ) : permissao === "denied" ? (
+                  <span className="notification-actions__status">
+                    Notificações bloqueadas pelo navegador
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="popover__divider" />
+
+              <div className="popover__section-head">
+                <strong>Próximos compromissos</strong>
+                <span>{reminders.length} nos próximos 14 dias</span>
+              </div>
+
               {reminders.length === 0 ? (
                 <p className="popover__empty">Nenhum compromisso nos próximos dias.</p>
               ) : (
@@ -222,7 +380,12 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
                   ))}
                 </ul>
               )}
-              <Link className="popover__foot" to="/agenda" onClick={() => setNotificationsOpen(false)}>
+
+              <Link
+                className="popover__foot"
+                to="/agenda"
+                onClick={() => setNotificationsOpen(false)}
+              >
                 Ver agenda completa
               </Link>
             </div>

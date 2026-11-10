@@ -41,6 +41,7 @@ export interface RepertorioMusico {
 export interface Repertorio {
   idRepertorio: number;
   musica: string;
+  artista: string | null;
   tom: string | null;
   duracaoSegundos: number | null;
   observacao: string | null;
@@ -143,6 +144,7 @@ export interface AtualizarBandaPayload {
 export interface CriarRepertorioPayload {
   idBanda: number;
   musica: string;
+  artista?: string;
   tom?: string;
   duracaoSegundos?: number;
   observacao?: string;
@@ -151,6 +153,7 @@ export interface CriarRepertorioPayload {
 
 export interface AtualizarRepertorioPayload {
   musica?: string;
+  artista?: string | null;
   tom?: string | null;
   duracaoSegundos?: number | null;
   observacao?: string | null;
@@ -284,4 +287,80 @@ export interface ErroValidacao {
 export interface ErroApiPayload {
   mensagem?: string;
   erros?: ErroValidacao[];
+}
+
+/* ---------- Modo ao vivo e notificações ---------- */
+
+export type NotificacaoTipo = "ENTRADA" | "CUTUCAR" | "ALERTA";
+
+export interface Notificacao {
+  idNotificacao: number;
+  idMusico: number;
+  idBanda: number;
+  idEvento: number | null;
+  idRepertorio: number | null;
+  tipo: NotificacaoTipo;
+  titulo: string;
+  mensagem: string;
+  lida: boolean;
+  criadoEm: string;
+  banda: string;
+  evento: string | null;
+  musica: string | null;
+}
+
+export interface SetlistAoVivoItem {
+  idRepertorio: number;
+  musica: string;
+  artista: string | null;
+  tom: string | null;
+  duracaoSegundos: number | null;
+  observacao: string | null;
+  musicos: RepertorioMusico[];
+}
+
+export type StatusAoVivo = "PARADO" | "RODANDO" | "ENCERRADO";
+
+export interface EstadoAoVivo {
+  idEvento: number;
+  idBanda: number;
+  nomeEvento: string;
+  nomeBanda: string;
+  dataEvento: string;
+  status: StatusAoVivo;
+  idRepertorioAtual: number | null;
+  iniciadoEm: string | null;
+  musicaIniciadaEm: string | null;
+  atualizadoEm: string | null;
+  setlist: SetlistAoVivoItem[];
+}
+
+export type AcaoAoVivo =
+  | "INICIAR"
+  | "SELECIONAR"
+  | "PROXIMA"
+  | "ANTERIOR"
+  | "REINICIAR"
+  | "ENCERRAR";
+
+export interface ControlarAoVivoPayload {
+  acao: AcaoAoVivo;
+  idRepertorio?: number;
+}
+
+export interface CutucarPayload {
+  idMusicoDestino?: number;
+  mensagem?: string;
+}
+
+export interface CutucarResponse {
+  mensagem: string;
+  enviados: number;
+}
+
+export interface LetraResponse {
+  lyrics: string;
+  artist: string;
+  title: string;
+  source: string;
 }

@@ -35,6 +35,7 @@ model Musico {
   repertorios     RepertorioMusico[]
   feedbacks       Feedback[]
   agendas         Agenda[]
+  notificacoes    Notificacao[]
 
   @@map("Musico")
 }
@@ -55,6 +56,7 @@ model Banda {
   repertorios  Repertorio[]
   agendas      Agenda[]
   feedbacks    Feedback[]
+  notificacoes Notificacao[]
 
   @@index([idLider])
   @@map("Banda")
@@ -116,6 +118,8 @@ model Evento {
   repertorios  EventoRepertorio[]
   equipamentos EventoEquipamento[]
   agendas      Agenda[]
+  notificacoes Notificacao[]
+  liveSessao   LiveSessao?
 
   @@index([idBanda])
   @@index([data])
@@ -149,15 +153,18 @@ model EventoEquipamento {
 model Repertorio {
   idRepertorio    Int     @id @default(autoincrement())
   musica          String  @db.VarChar(200)
+  artista         String? @db.VarChar(150)
   tom             String? @db.VarChar(3)
   duracaoSegundos Int?
   observacao      String? @db.Text
   idBanda         Int
   ativo           Boolean @default(true)
 
-  banda   Banda             @relation(fields: [idBanda], references: [idBanda], onDelete: Cascade, onUpdate: Cascade)
-  musicos RepertorioMusico[]
-  eventos EventoRepertorio[]
+  banda       Banda             @relation(fields: [idBanda], references: [idBanda], onDelete: Cascade, onUpdate: Cascade)
+  musicos     RepertorioMusico[]
+  eventos     EventoRepertorio[]
+  notificacoes Notificacao[]
+  liveSessoes LiveSessao[]
 
   @@index([idBanda])
   @@index([musica])
@@ -217,4 +224,45 @@ model Feedback {
   @@index([idBanda])
   @@index([idMusico])
   @@map("Feedback")
+}
+
+// ==================== MODO AO VIVO ====================
+
+model LiveSessao {
+  idEvento          Int       @id
+  idBanda           Int
+  idRepertorioAtual Int?
+  status            String    @default("PARADO") @db.VarChar(20)
+  iniciadoEm        DateTime?
+  musicaIniciadaEm  DateTime?
+  atualizadoEm      DateTime  @updatedAt
+
+  evento     Evento      @relation(fields: [idEvento], references: [idEvento], onDelete: Cascade, onUpdate: Cascade)
+  repertorio Repertorio? @relation(fields: [idRepertorioAtual], references: [idRepertorio], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([idBanda])
+  @@map("LiveSessao")
+}
+
+model Notificacao {
+  idNotificacao Int      @id @default(autoincrement())
+  idMusico      Int
+  idBanda       Int
+  idEvento      Int?
+  idRepertorio  Int?
+  tipo          String   @db.VarChar(30)
+  titulo        String   @db.VarChar(150)
+  mensagem      String   @db.Text
+  lida          Boolean  @default(false)
+  criadoEm      DateTime @default(now())
+
+  musico     Musico      @relation(fields: [idMusico], references: [idMusico], onDelete: Cascade, onUpdate: Cascade)
+  banda      Banda       @relation(fields: [idBanda], references: [idBanda], onDelete: Cascade, onUpdate: Cascade)
+  evento     Evento?     @relation(fields: [idEvento], references: [idEvento], onDelete: SetNull, onUpdate: Cascade)
+  repertorio Repertorio? @relation(fields: [idRepertorio], references: [idRepertorio], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([idMusico, lida])
+  @@index([idBanda])
+  @@index([idEvento])
+  @@map("Notificacao")
 }

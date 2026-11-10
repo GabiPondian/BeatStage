@@ -70,6 +70,7 @@ function SongFormModal({
     musica ? String(musica.idBanda) : lideradas[0] ? String(lideradas[0].idBanda) : ""
   );
   const [nome, setNome] = useState(musica?.musica ?? "");
+  const [artista, setArtista] = useState(musica?.artista ?? "");
   const [tom, setTom] = useState(musica?.tom ?? "");
   const [duracao, setDuracao] = useState(secondsToInput(musica?.duracaoSegundos));
   const [observacao, setObservacao] = useState(musica?.observacao ?? "");
@@ -128,6 +129,7 @@ function SongFormModal({
         await repertoriosService.criar({
           idBanda: Number(idBanda),
           musica: nome.trim(),
+          ...(artista.trim() ? { artista: artista.trim() } : {}),
           ...(tom ? { tom } : {}),
           ...(segundos !== null ? { duracaoSegundos: segundos } : {}),
           ...(observacao.trim() ? { observacao: observacao.trim() } : {}),
@@ -137,6 +139,7 @@ function SongFormModal({
       } else if (musica) {
         await repertoriosService.atualizar(musica.idRepertorio, {
           musica: nome.trim(),
+          artista: artista.trim() || null,
           tom: tom || null,
           duracaoSegundos: segundos,
           observacao: observacao.trim() || null,
@@ -221,16 +224,31 @@ function SongFormModal({
           </Field>
         </div>
 
-        <Field label="Nome da música" htmlFor="musica-nome" error={errors.musica} required>
-          <Input
-            id="musica-nome"
-            data-autofocus
-            value={nome}
-            placeholder="Ex.: Aonde Quer Que Eu Vá"
-            invalid={Boolean(errors.musica)}
-            onChange={(event) => setNome(event.target.value)}
-          />
-        </Field>
+        <div className="form-grid form-grid--two">
+          <Field label="Nome da música" htmlFor="musica-nome" error={errors.musica} required>
+            <Input
+              id="musica-nome"
+              data-autofocus
+              value={nome}
+              placeholder="Ex.: Tempo Perdido"
+              invalid={Boolean(errors.musica)}
+              onChange={(event) => setNome(event.target.value)}
+            />
+          </Field>
+
+          <Field
+            label="Artista"
+            htmlFor="musica-artista"
+            hint="Usado para buscar a letra no modo ao vivo."
+          >
+            <Input
+              id="musica-artista"
+              value={artista}
+              placeholder="Ex.: Legião Urbana"
+              onChange={(event) => setArtista(event.target.value)}
+            />
+          </Field>
+        </div>
 
         <div className="form-grid form-grid--two">
           <Field label="Tom musical" htmlFor="musica-tom" error={errors.tom}>
@@ -514,6 +532,9 @@ export function RepertoirePage() {
                           </span>
                           <div>
                             <strong>{musica.musica}</strong>
+                            <span className="song-cell__artist">
+                              {musica.artista ?? "Artista não informado"}
+                            </span>
                             {musica.observacao ? <span>{musica.observacao}</span> : null}
                           </div>
                         </div>
@@ -593,7 +614,9 @@ export function RepertoirePage() {
                     </span>
                     <div>
                       <strong>{musica.musica}</strong>
-                      <span>{banda?.nome}</span>
+                      <span>
+                        {musica.artista ?? "Artista não informado"} · {banda?.nome}
+                      </span>
                     </div>
                     <Badge tone={musica.tom ? "yellow" : "neutral"}>{musica.tom ?? "—"}</Badge>
                   </div>

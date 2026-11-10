@@ -6,6 +6,7 @@ import { equipamentosService } from "../services/equipamentos.service";
 import { eventosService } from "../services/eventos.service";
 import { feedbacksService } from "../services/feedbacks.service";
 import { musicosService } from "../services/musicos.service";
+import { notificacoesService } from "../services/notificacoes.service";
 import { repertoriosService } from "../services/repertorios.service";
 
 export const queryKeys = {
@@ -16,7 +17,9 @@ export const queryKeys = {
   ensaios: ["ensaios"] as const,
   equipamentos: ["equipamentos"] as const,
   agendas: ["agendas"] as const,
-  feedbacks: ["feedbacks"] as const
+  feedbacks: ["feedbacks"] as const,
+  notificacoes: ["notificacoes"] as const,
+  aoVivo: (idEvento: number) => ["ao-vivo", idEvento] as const
 };
 
 const commonOptions = {
@@ -86,6 +89,16 @@ export function useFeedbacks() {
     queryKey: queryKeys.feedbacks,
     queryFn: feedbacksService.listar,
     ...commonOptions
+  });
+}
+
+export function useNotificacoes() {
+  return useQuery({
+    queryKey: queryKeys.notificacoes,
+    queryFn: notificacoesService.listar,
+    ...commonOptions,
+    staleTime: 10_000,
+    refetchInterval: 15_000
   });
 }
 

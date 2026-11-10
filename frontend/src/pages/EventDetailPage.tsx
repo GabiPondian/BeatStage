@@ -273,6 +273,9 @@ export function EventDetailPage() {
                   <div className="setlist__body">
                     <div className="setlist__title">
                       <strong>{musica.musica}</strong>
+                      {musica.artista ? (
+                        <span className="setlist__artist">{musica.artista}</span>
+                      ) : null}
                       <Badge tone={musica.tom ? "yellow" : "neutral"}>
                         {musica.tom ?? "—"}
                       </Badge>
