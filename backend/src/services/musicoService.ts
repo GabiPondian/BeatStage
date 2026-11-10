@@ -143,6 +143,33 @@ export async function deletarMusico(idMusico: number) {
   return true;
 }
 
+//FUNÇÃO DE ATUALIZAR SOMENTE A FOTO DE PERFIL (ARQUIVO ENVIADO POR UPLOAD)
+//DEVOLVE A FOTO ANTERIOR PARA QUE O ARQUIVO ANTIGO POSSA SER REMOVIDO DO DISCO
+export async function atualizarFotoPerfil(idMusico: number, urlFoto: string) {
+  const existente = await prisma.musico.findFirst({
+    where: { idMusico, ativo: true },
+    select: { idMusico: true, fotoPerfil: true }
+  });
+
+  if (!existente) {
+    return null;
+  }
+
+  const musico = await prisma.musico.update({
+    where: { idMusico },
+    data: { fotoPerfil: urlFoto },
+    select: {
+      idMusico: true,
+      nome: true,
+      email: true,
+      cargo: true,
+      fotoPerfil: true
+    }
+  });
+
+  return { musico, fotoAnterior: existente.fotoPerfil };
+}
+
 //FUNÇÃO DE ALTERAR A SENHA DO MÚSICO AUTENTICADO
 export async function alterarSenha(
   idMusico: number,

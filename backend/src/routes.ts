@@ -2,6 +2,10 @@ import { Router } from "express";
 
 //AUTENTICAÇÃO
 import { loginController } from "./controllers/authController";
+import {
+  esqueciSenhaController,
+  redefinirSenhaController
+} from "./controllers/recuperacaoSenhaController";
 
 //MÚSICO
 import {
@@ -12,8 +16,12 @@ import {
   deletarMusicoController,
   buscarPerfilController,
   atualizarPerfilController,
+  enviarFotoPerfilController,
   alterarSenhaController
 } from "./controllers/musicoController";
+
+//UPLOAD DE ARQUIVOS
+import { receberFotoPerfil } from "./lib/upload";
 
 //BANDA
 import {
@@ -101,6 +109,10 @@ import { autorizarMusicoProprio } from "./middlewares/authorizationMiddleware";
 
 import { loginSchema } from "./schemas/authSchema";
 import {
+  esqueciSenhaSchema,
+  redefinirSenhaSchema
+} from "./schemas/recuperacaoSenhaSchema";
+import {
   musicoSchema,
   atualizarMusicoSchema,
   alterarSenhaSchema
@@ -133,6 +145,20 @@ const routes = Router();
 //ROTA DE LOGIN (PÚBLICA)
 routes.post("/auth/login", validarBody(loginSchema), loginController);
 
+//PEDIDO DE RECUPERAÇÃO DE SENHA POR E-MAIL (PÚBLICA)
+routes.post(
+  "/auth/esqueci-senha",
+  validarBody(esqueciSenhaSchema),
+  esqueciSenhaController
+);
+
+//REDEFINIÇÃO DE SENHA COM O TOKEN DO E-MAIL (PÚBLICA)
+routes.post(
+  "/auth/redefinir-senha",
+  validarBody(redefinirSenhaSchema),
+  redefinirSenhaController
+);
+
 // ==================== MÚSICO ====================
 
 //ROTA DE CADASTRO DE MÚSICO (PÚBLICA: É O REGISTRO NO SISTEMA)
@@ -147,6 +173,15 @@ routes.patch(
   autenticar,
   validarBody(atualizarMusicoSchema),
   atualizarPerfilController
+);
+
+//ROTA DE ENVIAR A FOTO DE PERFIL (MULTIPART, CAMPO "foto")
+//VEM ANTES DAS ROTAS COM ":id" PARA NÃO SER CONFUNDIDA COM UM ID
+routes.post(
+  "/musicos/perfil/foto",
+  autenticar,
+  receberFotoPerfil,
+  enviarFotoPerfilController
 );
 
 routes.patch(

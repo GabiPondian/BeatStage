@@ -24,6 +24,13 @@ export interface LoginResponse {
   musico: Musico;
 }
 
+export interface EsqueciSenhaResponse {
+  mensagem: string;
+  /** false quando o SMTP não está configurado e o link foi para o terminal */
+  emailEnviado: boolean;
+  smtpConfigurado: boolean;
+}
+
 export interface Banda {
   idBanda: number;
   nome: string;

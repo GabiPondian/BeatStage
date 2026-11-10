@@ -124,6 +124,10 @@ export function LoginPage() {
           </div>
         </Field>
 
+        <div className="auth-form__forgot">
+          <Link to="/esqueci-senha">Esqueci minha senha</Link>
+        </div>
+
         <Button
           type="submit"
           variant="purple"

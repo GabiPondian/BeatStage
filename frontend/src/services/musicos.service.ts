@@ -32,6 +32,17 @@ export const musicosService = {
     });
   },
 
+  //ENVIA O ARQUIVO DE IMAGEM (MULTIPART) PARA O BACKEND
+  enviarFoto(arquivo: File) {
+    const dados = new FormData();
+    dados.append("foto", arquivo);
+
+    return apiRequest<MusicoResponse>("/musicos/perfil/foto", {
+      method: "POST",
+      body: dados
+    });
+  },
+
   alterarSenha(payload: AlterarSenhaPayload) {
     return apiRequest<MensagemResponse>("/musicos/perfil/senha", {
       method: "PATCH",

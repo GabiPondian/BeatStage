@@ -36,6 +36,7 @@ model Musico {
   feedbacks       Feedback[]
   agendas         Agenda[]
   notificacoes    Notificacao[]
+  recuperacoesSenha RecuperacaoSenha[]
 
   @@map("Musico")
 }
@@ -265,4 +266,20 @@ model Notificacao {
   @@index([idBanda])
   @@index([idEvento])
   @@map("Notificacao")
+}
+
+//TOKENS DE RECUPERAÇÃO DE SENHA
+//O TOKEN PURO SÓ EXISTE NO E-MAIL: O BANCO GUARDA APENAS O HASH (SHA-256)
+model RecuperacaoSenha {
+  idRecuperacao Int       @id @default(autoincrement())
+  idMusico      Int
+  tokenHash     String    @unique @db.VarChar(64)
+  expiraEm      DateTime
+  usadoEm       DateTime?
+  criadoEm      DateTime  @default(now())
+
+  musico Musico @relation(fields: [idMusico], references: [idMusico], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([idMusico])
+  @@map("RecuperacaoSenha")
 }

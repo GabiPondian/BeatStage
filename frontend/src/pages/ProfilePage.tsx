@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -11,6 +11,7 @@ import {
   Pencil,
   ShieldCheck,
   Trash2,
+  Upload,
   UserRound
 } from "lucide-react";
 import { PageHeader } from "../components/ui/PageHeader";
@@ -269,12 +270,63 @@ function EditProfileModal({
   onSaved: (musico: Musico) => void;
 }) {
   const toast = useToast();
+  const { updateUser } = useAuth();
+  const inputFotoRef = useRef<HTMLInputElement>(null);
   const [nome, setNome] = useState(user.nome);
   const [email, setEmail] = useState(user.email);
   const [cargo, setCargo] = useState(user.cargo);
   const [fotoPerfil, setFotoPerfil] = useState(user.fotoPerfil ?? "");
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [formError, setFormError] = useState<string | null>(null);
+
+  //A IMAGEM SOBE ASSIM QUE É ESCOLHIDA: O USUÁRIO VÊ O RESULTADO NA HORA
+  const uploadMutation = useMutation({
+    mutationFn: (arquivo: File) => musicosService.enviarFoto(arquivo),
+    onSuccess: (response) => {
+      setFotoPerfil(response.musico.fotoPerfil ?? "");
+      setErrors((atual) => ({ ...atual, fotoPerfil: undefined }));
+      updateUser(response.musico);
+      toast.success("Foto atualizada", "A nova imagem já está no seu perfil.");
+    },
+    onError: (error) => {
+      if (error instanceof ApiError) {
+        setErrors((atual) => ({ ...atual, fotoPerfil: error.fields.foto }));
+      }
+      setFormError(mensagemDeErro(error));
+    }
+  });
+
+  const TIPOS_ACEITOS = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  const TAMANHO_MAXIMO = 3 * 1024 * 1024;
+
+  function selecionarFoto(event: ChangeEvent<HTMLInputElement>) {
+    const arquivo = event.target.files?.[0];
+
+    //PERMITE ESCOLHER O MESMO ARQUIVO DE NOVO
+    event.target.value = "";
+
+    if (!arquivo) return;
+
+    setFormError(null);
+
+    if (!TIPOS_ACEITOS.includes(arquivo.type)) {
+      setErrors((atual) => ({
+        ...atual,
+        fotoPerfil: "Envie uma imagem JPEG, PNG, WEBP ou GIF"
+      }));
+      return;
+    }
+
+    if (arquivo.size > TAMANHO_MAXIMO) {
+      setErrors((atual) => ({
+        ...atual,
+        fotoPerfil: "A imagem deve ter no máximo 3 MB"
+      }));
+      return;
+    }
+
+    uploadMutation.mutate(arquivo);
+  }
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -342,19 +394,42 @@ function EditProfileModal({
           <Avatar name={nome || user.nome} src={fotoPerfil || null} size="lg" />
           <div className="profile-photo-row__field">
             <Field
-              label="Foto de perfil (URL)"
+              label="Foto de perfil"
               htmlFor="perfil-foto"
               error={errors.fotoPerfil}
-              hint="Deixe em branco para usar as iniciais."
+              hint="JPEG, PNG, WEBP ou GIF, até 3 MB. Sem foto, usamos suas iniciais."
             >
-              <Input
-                id="perfil-foto"
-                type="url"
-                value={fotoPerfil}
-                placeholder="https://..."
-                invalid={Boolean(errors.fotoPerfil)}
-                onChange={(event) => setFotoPerfil(event.target.value)}
-              />
+              <div className="profile-photo-upload">
+                <input
+                  id="perfil-foto"
+                  ref={inputFotoRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="profile-photo-upload__input"
+                  onChange={selecionarFoto}
+                />
+                <div className="profile-photo-upload__actions">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    icon={<Upload size={14} />}
+                    loading={uploadMutation.isPending}
+                    onClick={() => inputFotoRef.current?.click()}
+                  >
+                    Escolher imagem
+                  </Button>
+                  {fotoPerfil ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={<Trash2 size={14} />}
+                      onClick={() => setFotoPerfil("")}
+                    >
+                      Remover
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
             </Field>
           </div>
         </div>

@@ -84,6 +84,43 @@ Rotas: `GET /ao-vivo/:idEvento`, `GET /ao-vivo/:idEvento/stream`,
 `GET /notificacoes`, `GET /notificacoes/stream`, `POST /notificacoes/lidas`,
 `PATCH /notificacoes/:id/lida`.
 
+### Recuperação de senha e e-mail
+
+| Arquivo | Papel |
+|---|---|
+| `services/recuperacaoSenhaService.ts` | Gera o token, salva o **hash** (SHA-256) e troca a senha |
+| `lib/mailer.ts` | Envio por SMTP genérico (Nodemailer) |
+| `controllers/recuperacaoSenhaController.ts` | Rotas públicas do fluxo |
+
+Rotas públicas: `POST /auth/esqueci-senha`, `POST /auth/redefinir-senha`.
+
+- O token puro só existe no e-mail; o banco (`model RecuperacaoSenha`) guarda o hash.
+- Link vale **60 minutos** e é de uso único. Pedir outro invalida os pendentes.
+- A resposta de `/auth/esqueci-senha` é **sempre a mesma**, exista ou não a conta
+  (evita descobrir e-mails cadastrados). O campo `smtpConfigurado` só serve para
+  avisar na tela quando não há SMTP.
+- **Sem `SMTP_HOST` o e-mail não sai**: o link é impresso no terminal do backend.
+  É o modo padrão de desenvolvimento — bom para demonstrar o fluxo sem provedor.
+
+Variáveis (ver `backend/.env.example`): `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`,
+`SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `APP_URL`.
+
+### Upload de foto de perfil
+
+| Arquivo | Papel |
+|---|---|
+| `lib/upload.ts` | Multer, validação e limpeza do arquivo antigo |
+| `POST /musicos/perfil/foto` | Recebe o arquivo no campo `foto` (multipart) |
+
+- Aceita **JPEG, PNG, WEBP ou GIF até 3 MB** (a extensão vem do MIME, não do nome).
+- Os arquivos vão para `backend/uploads/perfil/` (fora do Git) e são servidos em
+  `/uploads/...` pelo próprio Express.
+- O banco guarda o caminho relativo (`/uploads/perfil/arquivo.png`), então o schema
+  do `fotoPerfil` aceita **URL externa ou caminho de upload**.
+- O Vite faz proxy de `/uploads` em desenvolvimento; em produção o mesmo backend
+  serve os arquivos.
+- Ao trocar a foto, o arquivo anterior é apagado do disco.
+
 ### Frontend (`frontend/src/`)
 
 - `pages/LiveModePage.tsx` — tela do palco: SSE, contador (`live-timer`), letra
@@ -146,6 +183,12 @@ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/api/eventos   # 401
    se perde — só o canal em tempo real.
 5. **Letra não encontrada** costuma ser nome de música/artista diferente do
    original — o campo `artista` no repertório precisa estar preenchido.
+6. **`prisma generate` falha com `EPERM ... query_engine-windows.dll.node`**
+   quando o backend está rodando: o Windows trava o DLL em uso. Pare o backend
+   (`node dist/server.js` inclusive), gere e suba de novo.
+7. **Imagem de perfil não aparece** no navegador: o proxy `/uploads` do
+   `vite.config.ts` só passa a valer depois que o Vite recarrega a config —
+   reinicie `npm run dev:frontend` se a foto der 404.
 6. Existe uma cópia do projeto em `C:\ProjetoIntegrador\Beatstage - Copia` com o
    **mesmo código**. Se for editar, edite aqui; não duplique correções.
 

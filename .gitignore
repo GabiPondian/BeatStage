@@ -27,3 +27,6 @@ refs/*
 Thumbs.db
 .vscode/
 .idea/
+
+# Arquivos enviados pelos usuários (fotos de perfil)
+backend/uploads/

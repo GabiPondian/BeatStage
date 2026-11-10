@@ -14,6 +14,11 @@ export default defineConfig(({ mode }) => {
         "/api": {
           target: proxyTarget,
           changeOrigin: true
+        },
+        //FOTOS DE PERFIL ENVIADAS FICAM NO BACKEND, EM /uploads
+        "/uploads": {
+          target: proxyTarget,
+          changeOrigin: true
         }
       }
     },
@@ -21,6 +26,10 @@ export default defineConfig(({ mode }) => {
       port: 4173,
       proxy: {
         "/api": {
+          target: proxyTarget,
+          changeOrigin: true
+        },
+        "/uploads": {
           target: proxyTarget,
           changeOrigin: true
         }

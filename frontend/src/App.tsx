@@ -7,6 +7,8 @@ import {
 } from "./components/layout/ProtectedRoute";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
+import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { AgendaPage } from "./pages/AgendaPage";
 import { BandsPage } from "./pages/BandsPage";
@@ -40,6 +42,11 @@ export function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/cadastro" element={<RegisterPage />} />
         </Route>
+
+        {/* RECUPERAÇÃO DE SENHA: ACESSÍVEL MESMO COM SESSÃO ATIVA,
+            POIS O LINK DO E-MAIL PODE SER ABERTO EM QUALQUER NAVEGADOR */}
+        <Route path="/esqueci-senha" element={<ForgotPasswordPage />} />
+        <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/ao-vivo" element={<LiveModePage />} />

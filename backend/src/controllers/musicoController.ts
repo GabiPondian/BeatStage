@@ -5,11 +5,13 @@ import {
   listarMusicos,
   buscarMusicoPorId,
   atualizarMusico,
+  atualizarFotoPerfil,
   deletarMusico,
   alterarSenha
 } from "../services/musicoService";
 
 import { usuarioAutenticado } from "../middlewares/authMiddleware";
+import { caminhoPublicoDaFoto, removerFotoAntiga } from "../lib/upload";
 
 import {
   AlterarSenhaInput,
@@ -162,6 +164,48 @@ export const atualizarPerfilController: RequestHandler = async (req, res, next) 
     res.status(200).json({
       mensagem: "Perfil atualizado com sucesso",
       musico
+    });
+  } catch (erro) {
+    next(erro);
+  }
+};
+
+//CONTROLLER DE ENVIAR A FOTO DE PERFIL (ARQUIVO MULTIPART NO CAMPO "foto")
+export const enviarFotoPerfilController: RequestHandler = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const { idMusico } = usuarioAutenticado(req);
+
+    if (!req.file) {
+      res.status(400).json({
+        mensagem: "Selecione uma imagem para enviar"
+      });
+      return;
+    }
+
+    const urlFoto = caminhoPublicoDaFoto(req.file.filename);
+
+    const resultado = await atualizarFotoPerfil(idMusico, urlFoto);
+
+    if (!resultado) {
+      //O ARQUIVO JÁ ESTAVA NO DISCO: DESCARTA PARA NÃO DEIXAR LIXO
+      await removerFotoAntiga(urlFoto);
+
+      res.status(404).json({
+        mensagem: "Músico não encontrado"
+      });
+      return;
+    }
+
+    //A FOTO ANTERIOR (SE FOI UPLOAD) DEIXA DE EXISTIR NO DISCO
+    await removerFotoAntiga(resultado.fotoAnterior);
+
+    res.status(200).json({
+      mensagem: "Foto de perfil atualizada com sucesso",
+      musico: resultado.musico
     });
   } catch (erro) {
     next(erro);

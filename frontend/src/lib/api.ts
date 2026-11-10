@@ -67,8 +67,10 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const { method = "GET", body, auth = true, signal } = options;
   const headers: Record<string, string> = { Accept: "application/json" };
+  const ehFormData = body instanceof FormData;
 
-  if (body !== undefined) {
+  //COM FormData O Content-Type É DEFINIDO PELO NAVEGADOR (INCLUI O boundary)
+  if (body !== undefined && !ehFormData) {
     headers["Content-Type"] = "application/json";
   }
 
@@ -83,7 +85,12 @@ export async function apiRequest<T>(
     response = await fetch(`${API_BASE_URL}${path}`, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body:
+        body === undefined
+          ? undefined
+          : ehFormData
+            ? (body as FormData)
+            : JSON.stringify(body),
       signal
     });
   } catch (error) {

@@ -1,12 +1,23 @@
 import { z } from "zod";
 
+//A FOTO PODE SER UMA URL EXTERNA OU O CAMINHO DE UM ARQUIVO ENVIADO POR UPLOAD
+const fotoPerfilSchema = z
+  .string()
+  .trim()
+  .max(500, "O caminho da foto deve ter no máximo 500 caracteres")
+  .refine(
+    (valor) =>
+      /^https?:\/\//i.test(valor) || /^\/uploads\/perfil\/[\w.-]+$/.test(valor),
+    "Informe uma URL válida ou envie um arquivo de imagem"
+  );
+
 //CADASTRO DE MUSICO
 export const musicoSchema = z.object({
   nome: z.string().trim().min(2, "O nome deve ter pelo menos 2 caracteres").max(150),
   email: z.string().trim().email("Informe um e-mail válido").max(255),
   senha: z.string().min(8, "A senha deve ter pelo menos 8 caracteres"),
   cargo: z.string().trim().min(2, "Informe o cargo musical").max(150),
-  fotoPerfil: z.string().trim().url("Informe uma URL válida para a foto").max(500).optional()
+  fotoPerfil: fotoPerfilSchema.optional()
 });
 
 //ATUALIZAR MUSICO
@@ -15,7 +26,7 @@ export const atualizarMusicoSchema = z.object({
   nome: z.string().trim().min(2).max(150).optional(),
   email: z.string().trim().email().max(255).optional(),
   cargo: z.string().trim().min(2).max(150).optional(),
-  fotoPerfil: z.string().trim().url().max(500).nullable().optional()
+  fotoPerfil: fotoPerfilSchema.nullable().optional()
 }).refine(
   (dados) => Object.values(dados).some((valor) => valor !== undefined),
   {
