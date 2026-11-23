@@ -67,16 +67,17 @@ export function LoginPage() {
 
   return (
     <AuthLayout
+      hero="login"
       footerLink={
         <p>
-          Ainda não tem uma conta? <Link to="/cadastro">Cadastre-se gratuitamente</Link>
+          Ainda não faz parte? <Link to="/cadastro">Crie sua conta</Link>
         </p>
       }
     >
-      <span className="auth-card__eyebrow">Acesse sua conta</span>
+      <span className="auth-card__eyebrow">Bem-vindo de volta</span>
       <h2>Entre na sua conta</h2>
       <p className="auth-card__subtitle">
-        Continue de onde parou. Sua banda, seu repertório e sua agenda esperam por você.
+        Acesse o palco onde sua organização acontece.
       </p>
 
       {formError ? (

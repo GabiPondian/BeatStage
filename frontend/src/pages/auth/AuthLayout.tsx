@@ -1,41 +1,64 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Logo } from "../../components/Logo";
-import authHero from "../../assets/auth-hero.jpg";
+import authHeroDefault from "../../assets/auth-hero.jpg";
+import authHeroLogin from "../../assets/auth-login.jpg";
+import authHeroRegister from "../../assets/auth-register.jpg";
 
 interface AuthLayoutProps {
   children: ReactNode;
   footerLink?: ReactNode;
   backTo?: string;
   backLabel?: string;
+  /** Qual imagem de fundo do hero usar. */
+  hero?: "login" | "register" | "default";
+  /** Texto do rodapé do hero. */
+  heroFoot?: string;
 }
+
+const HERO_IMAGES = {
+  login: authHeroLogin,
+  register: authHeroRegister,
+  default: authHeroDefault
+} as const;
 
 export function AuthLayout({
   children,
   footerLink,
   backTo,
-  backLabel = "Voltar ao início"
+  backLabel = "Voltar ao início",
+  hero = "default",
+  heroFoot
 }: AuthLayoutProps) {
+  const foot =
+    heroFoot ??
+    (hero === "register" ? "Um novo capítulo da sua jornada musical." : "Feito por músicos, para músicos.");
+
   return (
     <div className="auth-page">
       <aside className="auth-hero">
-        <img className="auth-hero__image" src={authHero} alt="" aria-hidden="true" />
+        <img
+          className="auth-hero__image"
+          src={HERO_IMAGES[hero]}
+          alt=""
+          aria-hidden="true"
+        />
         <div className="auth-hero__overlay" aria-hidden="true" />
         <div className="auth-hero__content">
           <Logo variant="light" />
           <div className="auth-hero__copy">
-            <span className="auth-hero__eyebrow">Bem-vindo ao BeatStage</span>
+            <span className="auth-hero__eyebrow">Sua banda. Seu palco.</span>
             <h1>
               Transformando caos
               <br />
               <em>em espetáculo.</em>
             </h1>
             <p>
-              Repertórios, ensaios, eventos e equipamentos em um só lugar.
-              Menos planilhas, mais música.
+              Ensaios, repertórios e apresentações em perfeita sintonia com toda a
+              sua banda.
             </p>
           </div>
-          <span className="auth-hero__foot">Feito para quem vive de música.</span>
+          <span className="auth-hero__foot">{foot}</span>
         </div>
       </aside>
 

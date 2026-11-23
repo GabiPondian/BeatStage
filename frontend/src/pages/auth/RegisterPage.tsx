@@ -109,18 +109,19 @@ export function RegisterPage() {
 
   return (
     <AuthLayout
+      hero="register"
       backTo="/login"
       backLabel="Voltar ao login"
       footerLink={
         <p>
-          Já tem uma conta? <Link to="/login">Entrar no BeatStage</Link>
+          Já possui uma conta? <Link to="/login">Voltar para o login</Link>
         </p>
       }
     >
       <span className="auth-card__eyebrow">Comece agora</span>
       <h2>Crie sua conta</h2>
       <p className="auth-card__subtitle">
-        Leve sua banda para um novo palco. É rápido, gratuito e feito para músicos.
+        Preencha seus dados para fazer parte do BeatStage.
       </p>
 
       {formError ? (
@@ -208,7 +209,7 @@ export function RegisterPage() {
                 id="cadastro-senha"
                 type={showPassword ? "text" : "password"}
                 autoComplete="new-password"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Mín. 8 caracteres"
                 icon={<LockKeyhole size={16} />}
                 value={senha}
                 invalid={Boolean(errors.senha)}
@@ -253,7 +254,7 @@ export function RegisterPage() {
           loading={submitting}
           iconRight={<ArrowRight size={17} />}
         >
-          Criar minha conta
+          Criar conta
         </Button>
       </form>
 
