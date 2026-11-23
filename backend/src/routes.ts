@@ -140,6 +140,12 @@ import {
 
 const routes = Router();
 
+// ==================== SAÚDE (HEALTH CHECK) ====================
+//USADO POR SERVIÇOS DE HOSPEDAGEM (RENDER, ETC.) PARA VERIFICAR SE A API ESTÁ VIVA
+routes.get("/health", (_req, res) => {
+  res.status(200).json({ status: "ok", servico: "BeatStage API" });
+});
+
 // ==================== AUTENTICAÇÃO ====================
 
 //ROTA DE LOGIN (PÚBLICA)
