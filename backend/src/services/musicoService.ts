@@ -3,29 +3,65 @@ import prisma from "../lib/prisma";
 import { AppError } from "../errors/AppError";
 import { AlterarSenhaInput, AtualizarMusicoInput, MusicoInput } from "../schemas/musicoSchema";
 
+const CAMPOS_PUBLICOS = {
+  idMusico: true,
+  nome: true,
+  email: true,
+  cargo: true,
+  fotoPerfil: true
+} as const;
+
 //FUNÇÃO DE CADASTRO
+//UM PERFIL INATIVO COM O MESMO E-MAIL É REATIVADO PELO CADASTRO (MANTÉM BANDAS E HISTÓRICO)
 export async function cadastrarMusico(dados: MusicoInput) {
   const email = dados.email.toLowerCase();
+  const existente = await prisma.musico.findUnique({
+    where: { email },
+    select: { idMusico: true, ativo: true, fotoPerfil: true }
+  });
+
+  if (existente?.ativo) {
+    throw new AppError("Já existe um músico cadastrado com esse e-mail", 409);
+  }
+
   const senhaHash = await bcrypt.hash(dados.senha, 10);
+
+  const dadosBase = {
+    nome: dados.nome,
+    email,
+    senhaHash,
+    cargo: dados.cargo
+  };
+
+  if (existente) {
+    const musico = await prisma.musico.update({
+      where: { idMusico: existente.idMusico },
+      data: {
+        ...dadosBase,
+        ativo: true,
+        //SEM FOTO NOVA, A FOTO ANTERIOR DO PERFIL REATIVADO É MANTIDA
+        ...(dados.fotoPerfil ? { fotoPerfil: dados.fotoPerfil } : {})
+      },
+      select: CAMPOS_PUBLICOS
+    });
+
+    return {
+      musico,
+      reativado: true,
+      //APENAS A FOTO SUBSTITUÍDA PRECISA SAIR DO DISCO
+      fotoAnterior: dados.fotoPerfil ? existente.fotoPerfil : null
+    };
+  }
 
   const musico = await prisma.musico.create({
     data: {
-      nome: dados.nome,
-      email,
-      senhaHash,
-      cargo: dados.cargo,
+      ...dadosBase,
       fotoPerfil: dados.fotoPerfil
     },
-    select: {
-      idMusico: true,
-      nome: true,
-      email: true,
-      cargo: true,
-      fotoPerfil: true
-    }
+    select: CAMPOS_PUBLICOS
   });
 
-  return musico;
+  return { musico, reativado: false, fotoAnterior: null };
 }
 
 //FUNÇÃO DE LISTAR MUSICO

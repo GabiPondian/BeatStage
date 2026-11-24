@@ -3,6 +3,18 @@ import type { ErroApiPayload } from "../types/api";
 const rawBaseUrl = import.meta.env.VITE_API_URL ?? "/api";
 export const API_BASE_URL = rawBaseUrl.replace(/\/+$/, "");
 
+//FOTOS ENVIADAS POR UPLOAD FICAM NO BACKEND (/uploads); EM PRODUÇÃO PRECISAM DO ORIGEM ABSOLUTO
+const API_ORIGIN = /^https?:\/\//i.test(API_BASE_URL)
+  ? API_BASE_URL.replace(/\/api$/, "")
+  : "";
+
+//CONVERTE CAMINHOS COMO /uploads/perfil/x.jpg NA URL COMPLETA DO BACKEND
+export function resolveMediaUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  if (/^(https?:|blob:|data:)/i.test(path)) return path;
+  return `${API_ORIGIN}${path}`;
+}
+
 export const TOKEN_STORAGE_KEY = "beatstage.token";
 export const USER_STORAGE_KEY = "beatstage.musico";
 export const UNAUTHORIZED_EVENT = "beatstage:unauthorized";

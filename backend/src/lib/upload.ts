@@ -83,6 +83,16 @@ export function caminhoPublicoDaFoto(nomeArquivo: string): string {
   return `/uploads/perfil/${nomeArquivo}`;
 }
 
+//QUANDO O ARQUIVO ACOMPANHA O CADASTRO, ELE VIRA O CAMPO fotoPerfil DO BODY
+//PRECISA RODAR ANTES DA VALIDAÇÃO DO SCHEMA
+export const aplicarFotoNoBody: RequestHandler = (req, _res, next) => {
+  if (req.file) {
+    req.body.fotoPerfil = caminhoPublicoDaFoto(req.file.filename);
+  }
+
+  next();
+};
+
 //REMOVE A FOTO ANTERIOR APENAS QUANDO ELA VEIO DE UPLOAD
 //URLS EXTERNAS (http://...) E O CAMPO VAZIO SÃO PRESERVADOS
 export async function removerFotoAntiga(url: string | null | undefined) {

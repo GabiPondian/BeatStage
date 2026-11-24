@@ -33,6 +33,9 @@ export async function exigirLiderDaBanda(idBanda: number, idMusico: number) {
   const banda = await buscarBandaDoMusico(idBanda, idMusico);
 
   if (banda.idLider !== idMusico) {
+    console.warn(
+      `[autorizacao] banda ${idBanda}: lider=${banda.idLider} autenticado=${idMusico}`
+    );
     throw new AppError(
       "Apenas o líder da banda pode realizar esta operação",
       403

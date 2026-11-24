@@ -264,6 +264,28 @@
   background: linear-gradient(135deg, #8b5cf6, #6d28d9);
 }
 
+/*BOTÕES SECUNDÁRIOS PRECISAM DE CONTRASTE NO CARD CLARO DO LOGIN/CADASTRO*/
+.auth-card .btn--outline {
+  border-color: var(--auth-line);
+  background: #fffdf9;
+  color: #5b21b6;
+}
+
+.auth-card .btn--outline:hover:not(:disabled) {
+  border-color: #7c3aed;
+  background: #f4ecff;
+  color: #4c1d95;
+}
+
+.auth-card .btn--ghost {
+  color: #9a8aa0;
+}
+
+.auth-card .btn--ghost:hover:not(:disabled) {
+  background: #f4ecff;
+  color: #b91c1c;
+}
+
 .auth-card .alert--error {
   margin-top: 16px;
   background: #fef2f2;

@@ -12,6 +12,7 @@ import { authService } from "../services/auth.service";
 import {
   getStoredToken,
   storeToken,
+  TOKEN_STORAGE_KEY,
   UNAUTHORIZED_EVENT
 } from "../lib/api";
 import { USER_STORAGE_KEY } from "../lib/api";
@@ -133,6 +134,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, [token, updateUser, clearSession]);
+
+  // Login ou logout em outra aba atualiza esta aba (evita usuário e token se contradizerem).
+  useEffect(() => {
+    function sincronizarSessao(evento: StorageEvent) {
+      if (evento.key !== null && evento.key !== TOKEN_STORAGE_KEY) return;
+
+      const tokenAtual = getStoredToken();
+      setToken(tokenAtual);
+
+      if (!tokenAtual) {
+        setUser(null);
+        setStatus("anonymous");
+        return;
+      }
+
+      setUser(readStoredUser());
+    }
+
+    window.addEventListener("storage", sincronizarSessao);
+    return () => window.removeEventListener("storage", sincronizarSessao);
+  }, []);
 
   // Resposta 401 de qualquer serviço encerra a sessão.
   useEffect(() => {

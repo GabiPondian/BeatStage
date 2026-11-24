@@ -722,7 +722,17 @@ function TransferLeadershipModal({
       toast.success("Liderança transferida", "Você agora é integrante da banda.");
       onClose();
     },
-    onError: (err) => setError(mensagemDeErro(err))
+    onError: (err) => {
+      //SESSÃO EM OUTRA CONTA (OUTRA ABA): O TOKEN NÃO É O DO LÍDER
+      if (err instanceof ApiError && err.status === 403) {
+        setError(
+          "Sua sessão não é a do líder desta banda. Saia da conta e entre novamente com o login do líder."
+        );
+        return;
+      }
+
+      setError(mensagemDeErro(err));
+    }
   });
 
   async function submit() {

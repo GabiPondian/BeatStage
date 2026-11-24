@@ -21,7 +21,7 @@ import {
 } from "./controllers/musicoController";
 
 //UPLOAD DE ARQUIVOS
-import { receberFotoPerfil } from "./lib/upload";
+import { aplicarFotoNoBody, receberFotoPerfil } from "./lib/upload";
 
 //BANDA
 import {
@@ -168,7 +168,14 @@ routes.post(
 // ==================== MÚSICO ====================
 
 //ROTA DE CADASTRO DE MÚSICO (PÚBLICA: É O REGISTRO NO SISTEMA)
-routes.post("/musicos", validarBody(musicoSchema), criarMusico);
+//O CADASTRO ACEITA JSON OU MULTIPART COM A FOTO NO CAMPO "foto"
+routes.post(
+  "/musicos",
+  receberFotoPerfil,
+  aplicarFotoNoBody,
+  validarBody(musicoSchema),
+  criarMusico
+);
 
 //ROTAS DO PRÓPRIO PERFIL (A IDENTIDADE VEM DO TOKEN)
 //PRECISAM VIR ANTES DE "/musicos/:id" PARA "perfil" NÃO SER LIDO COMO ID

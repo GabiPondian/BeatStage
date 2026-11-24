@@ -1,14 +1,15 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   AtSign,
-  Camera,
   Eye,
   EyeOff,
   LockKeyhole,
   UserRound,
-  Music2
+  Music2,
+  Trash2,
+  Upload
 } from "lucide-react";
 import { AuthLayout } from "./AuthLayout";
 import { Button } from "../../components/ui/Button";
@@ -23,15 +24,8 @@ function validarEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function validarUrl(value: string): boolean {
-  if (!value.trim()) return true;
-  try {
-    const url = new URL(value.trim());
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
+const TIPOS_ACEITOS = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const TAMANHO_MAXIMO = 3 * 1024 * 1024;
 
 interface FormErrors {
   nome?: string;
@@ -49,13 +43,56 @@ export function RegisterPage() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [cargo, setCargo] = useState("");
-  const [fotoPerfil, setFotoPerfil] = useState("");
+  const [fotoArquivo, setFotoArquivo] = useState<File | null>(null);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const inputFotoRef = useRef<HTMLInputElement>(null);
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  //LIBERA A URL TEMPORÁRIA DA PRÉVIA QUANDO ELA TROCA OU A TELA SAI
+  useEffect(() => {
+    return () => {
+      if (fotoPreview) URL.revokeObjectURL(fotoPreview);
+    };
+  }, [fotoPreview]);
+
+  function selecionarFoto(event: ChangeEvent<HTMLInputElement>) {
+    const arquivo = event.target.files?.[0];
+
+    //PERMITE ESCOLHER O MESMO ARQUIVO DE NOVO
+    event.target.value = "";
+
+    if (!arquivo) return;
+
+    if (!TIPOS_ACEITOS.includes(arquivo.type)) {
+      setErrors((atual) => ({
+        ...atual,
+        fotoPerfil: "Envie uma imagem JPEG, PNG, WEBP ou GIF"
+      }));
+      return;
+    }
+
+    if (arquivo.size > TAMANHO_MAXIMO) {
+      setErrors((atual) => ({
+        ...atual,
+        fotoPerfil: "A imagem deve ter no máximo 3 MB"
+      }));
+      return;
+    }
+
+    setErrors((atual) => ({ ...atual, fotoPerfil: undefined }));
+    setFotoArquivo(arquivo);
+    setFotoPreview(URL.createObjectURL(arquivo));
+  }
+
+  function removerFoto() {
+    setFotoArquivo(null);
+    setFotoPreview(null);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -65,9 +102,6 @@ export function RegisterPage() {
     if (!email.trim()) nextErrors.email = "Informe o e-mail";
     else if (!validarEmail(email.trim())) nextErrors.email = "Informe um e-mail válido";
     if (cargo.trim().length < 2) nextErrors.cargo = "Informe sua função musical";
-    if (!validarUrl(fotoPerfil)) {
-      nextErrors.fotoPerfil = "Informe uma URL http(s) válida ou deixe em branco";
-    }
     if (senha.length < 8) nextErrors.senha = "A senha deve ter pelo menos 8 caracteres";
     if (confirmarSenha !== senha) {
       nextErrors.confirmarSenha = "As senhas não coincidem";
@@ -81,15 +115,17 @@ export function RegisterPage() {
     setSubmitting(true);
 
     try {
-      await musicosService.criar({
-        nome: nome.trim(),
-        email: email.trim(),
-        senha,
-        cargo: cargo.trim(),
-        ...(fotoPerfil.trim() ? { fotoPerfil: fotoPerfil.trim() } : {})
-      });
+      const resposta = await musicosService.criar(
+        {
+          nome: nome.trim(),
+          email: email.trim(),
+          senha,
+          cargo: cargo.trim()
+        },
+        fotoArquivo
+      );
 
-      toast.success("Cadastro realizado com sucesso!", "Agora é só entrar no palco.");
+      toast.success(resposta.mensagem, "Agora é só entrar no palco.");
       navigate("/login", { state: { email: email.trim(), cadastro: true }, replace: true });
     } catch (error) {
       if (error instanceof ApiError) {
@@ -132,23 +168,46 @@ export function RegisterPage() {
 
       <form className="auth-form" onSubmit={handleSubmit} noValidate>
         <div className="profile-photo-row">
-          <Avatar name={nome || "Novo músico"} src={fotoPerfil || null} size="lg" />
+          <Avatar name={nome || "Novo músico"} src={fotoPreview} size="lg" />
           <div className="profile-photo-row__field">
             <Field
-              label="Foto de perfil (URL)"
+              label="Foto de perfil"
               htmlFor="cadastro-foto"
               error={errors.fotoPerfil}
-              hint="Opcional. Cole o endereço de uma imagem."
+              hint="Opcional. JPEG, PNG, WEBP ou GIF, até 3 MB."
             >
-              <Input
-                id="cadastro-foto"
-                type="url"
-                placeholder="https://..."
-                icon={<Camera size={16} />}
-                value={fotoPerfil}
-                invalid={Boolean(errors.fotoPerfil)}
-                onChange={(event) => setFotoPerfil(event.target.value)}
-              />
+              <div className="profile-photo-upload">
+                <input
+                  id="cadastro-foto"
+                  ref={inputFotoRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="profile-photo-upload__input"
+                  onChange={selecionarFoto}
+                />
+                <div className="profile-photo-upload__actions">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    icon={<Upload size={14} />}
+                    onClick={() => inputFotoRef.current?.click()}
+                  >
+                    Escolher imagem
+                  </Button>
+                  {fotoPreview ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      icon={<Trash2 size={14} />}
+                      onClick={removerFoto}
+                    >
+                      Remover
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
             </Field>
           </div>
         </div>

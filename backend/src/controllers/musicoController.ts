@@ -21,13 +21,23 @@ import {
 //CONTROLLER DE CADASTRO DO MUSICO
 export const criarMusico: RequestHandler = async (req, res, next) => {
   try {
-    const musico = await cadastrarMusico(req.body);
+    const { musico, reativado, fotoAnterior } = await cadastrarMusico(req.body);
+
+    //A FOTO ANTIGA DO PERFIL REATIVADO (SE FOI TROCADA) SAI DO DISCO
+    await removerFotoAntiga(fotoAnterior);
 
     res.status(201).json({
-      mensagem: "Músico cadastrado com sucesso",
+      mensagem: reativado
+        ? "Conta reativada com sucesso"
+        : "Músico cadastrado com sucesso",
       musico
     });
   } catch (erro) {
+    //O CADASTRO FALHOU: A FOTO ENVIADA NÃO PODE FICAR ÓRFÃ NO DISCO
+    if (req.file) {
+      await removerFotoAntiga(caminhoPublicoDaFoto(req.file.filename));
+    }
+
     next(erro);
   }
 };

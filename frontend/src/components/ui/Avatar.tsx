@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { initials } from "../../lib/format";
+import { resolveMediaUrl } from "../../lib/api";
 
 interface AvatarProps {
   name: string;
@@ -22,7 +23,8 @@ function toneFor(name: string): string {
 
 export function Avatar({ name, src, size = "md", className = "" }: AvatarProps) {
   const [failed, setFailed] = useState(false);
-  const showImage = Boolean(src) && !failed;
+  const imageUrl = resolveMediaUrl(src);
+  const showImage = Boolean(imageUrl) && !failed;
 
   return (
     <span
@@ -32,7 +34,7 @@ export function Avatar({ name, src, size = "md", className = "" }: AvatarProps) 
     >
       {showImage ? (
         <img
-          src={src ?? ""}
+          src={imageUrl ?? ""}
           alt=""
           loading="lazy"
           onError={() => setFailed(true)}

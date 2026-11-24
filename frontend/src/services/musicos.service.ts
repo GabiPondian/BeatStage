@@ -9,7 +9,23 @@ import type {
 } from "../types/api";
 
 export const musicosService = {
-  criar(payload: CriarMusicoPayload) {
+  criar(payload: CriarMusicoPayload, foto?: File | null) {
+    //COM ARQUIVO O CADASTRO VAI EM MULTIPART (MESMA ROTA, CAMPO "foto")
+    if (foto) {
+      const dados = new FormData();
+      dados.append("nome", payload.nome);
+      dados.append("email", payload.email);
+      dados.append("senha", payload.senha);
+      dados.append("cargo", payload.cargo);
+      dados.append("foto", foto);
+
+      return apiRequest<MusicoResponse>("/musicos", {
+        method: "POST",
+        body: dados,
+        auth: false
+      });
+    }
+
     return apiRequest<MusicoResponse>("/musicos", {
       method: "POST",
       body: payload,
